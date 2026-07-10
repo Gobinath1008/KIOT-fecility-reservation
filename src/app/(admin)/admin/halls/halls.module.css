@@ -1,0 +1,32 @@
+.page { padding: 40px 24px 80px; }
+.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+.hallGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; justify-content: center; }
+.hallCard {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl); padding: 32px 24px; transition: var(--transition);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 16px;
+  height: 100%;
+}
+.hallCard:hover { border-color: rgba(108,99,255,0.3); }
+.hallTop { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; width: 100%; }
+.hallEmoji { font-size: 36px; flex-shrink: 0; }
+.hallInfo { flex: 1; display: flex; flex-direction: column; align-items: center; width: 100%; }
+.hallName { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
+.hallMeta { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+.facilities { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 8px; }
+.facilityTag {
+  padding: 3px 10px; background: var(--input-bg); border: 1px solid var(--input-border);
+  border-radius: 999px; font-size: 11px; color: var(--text-muted);
+}
+.hallActions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; width: 100%; }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.facilitiesGrid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.modalActions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+@media (max-width: 768px) {
+  .hallGrid { grid-template-columns: 1fr; }
+  .row2 { grid-template-columns: 1fr; }
+}

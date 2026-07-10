@@ -1,0 +1,95 @@
+.page { padding-bottom: 80px; }
+.banner {
+  background: linear-gradient(135deg, #1A1050, #0F3460, #16213E);
+  padding: 40px 0; margin-bottom: 40px;
+}
+.backBtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 500;
+  margin-bottom: 20px; transition: var(--transition);
+}
+.backBtn:hover { color: #fff; }
+.bannerContent { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.bannerIcon { font-size: 64px; }
+.bannerText { flex: 1; }
+.hallName { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.hallLocation { font-size: 15px; color: rgba(255,255,255,0.7); }
+.bannerStats {
+  display: flex; align-items: center; gap: 0;
+  background: rgba(0,0,0,0.3); border-radius: var(--radius-lg);
+  border: 1px solid rgba(255,255,255,0.1); padding: 16px 24px;
+  backdrop-filter: blur(8px);
+}
+.statBox { text-align: center; padding: 0 20px; }
+.statNum { display: block; font-size: 28px; font-weight: 800; color: #fff; }
+.statLbl { font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; }
+.statDivider { width: 1px; height: 40px; background: rgba(255,255,255,0.2); }
+
+.content { display: grid; grid-template-columns: 1fr 320px; gap: 32px; }
+.section { margin-bottom: 32px; }
+.sectionTitle { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.dateTag { font-size: 13px; font-weight: 500; color: var(--text-muted); background: var(--input-bg); padding: 2px 10px; border-radius: 999px; }
+.description { font-size: 15px; color: var(--text-secondary); line-height: 1.7; }
+
+.facilitiesGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; }
+.facilityCard {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: var(--radius-md); padding: 16px 12px;
+  text-align: center; transition: var(--transition);
+}
+.facilityCard:hover { border-color: var(--primary); }
+.facilityIcon { display: block; font-size: 28px; margin-bottom: 8px; }
+.facilityName { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+.availableBox {
+  display: flex; align-items: center; gap: 16px; padding: 20px;
+  background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.25);
+  border-radius: var(--radius-lg);
+}
+.availableIcon { font-size: 32px; }
+.availableTitle { font-size: 15px; font-weight: 600; color: var(--success); }
+.availableSub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+.slotList { display: flex; flex-direction: column; gap: 12px; }
+.slotItem {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: var(--radius-md); padding: 16px;
+  transition: var(--transition);
+}
+.slotItem:hover { border-color: rgba(108,99,255,0.3); }
+.slotItem.inProgress {
+  background: linear-gradient(135deg, rgba(243,156,18,0.05), rgba(243,156,18,0.02));
+  border: 2px solid var(--warning);
+  box-shadow: 0 0 12px rgba(243,156,18,0.15);
+}
+.slotHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.slotDate { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+.slotTime {
+  background: rgba(108,99,255,0.1); border: 1px solid rgba(108,99,255,0.25);
+  border-radius: var(--radius-sm); padding: 6px 12px;
+  font-size: 13px; font-weight: 700; color: var(--primary-light);
+  display: inline-block; margin-bottom: 10px;
+}
+.slotInfo { display: flex; flex-direction: column; gap: 6px; }
+.slotPurpose { font-size: 14px; font-weight: 500; color: var(--text); }
+.slotUser { font-size: 13px; color: var(--text-secondary); }
+
+/* Sidebar */
+.sidebar { }
+.bookCard {
+  position: sticky; top: 80px;
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: var(--radius-xl); padding: 24px;
+}
+.bookCardTop { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.bookIcon { font-size: 32px; }
+.bookTitle { font-size: 18px; font-weight: 700; color: var(--text); }
+.bookSub { font-size: 13px; color: var(--text-secondary); }
+.bookDetails { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+.bookDetail { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); }
+.bookNote { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 12px; }
+
+@media (max-width: 900px) {
+  .content { grid-template-columns: 1fr; }
+  .bannerStats { display: none; }
+}
