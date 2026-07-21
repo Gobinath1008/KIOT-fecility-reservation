@@ -4,7 +4,6 @@ const VehicleSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   vehicleType: { type: String, enum: ['car', 'van', 'bus', 'bike'], required: true },
   registrationNumber: { type: String, required: true, unique: true, trim: true },
-  driverMobile: { type: String, default: '' },
   capacity: { type: Number, required: true, min: 1 },
   mileage: { type: Number, default: 0 },
   location: { type: String, required: true },

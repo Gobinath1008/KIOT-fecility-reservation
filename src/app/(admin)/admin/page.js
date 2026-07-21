@@ -28,7 +28,40 @@ export default function AdminDashboard() {
         setCurrentUser(user);
 
         const b = Array.isArray(bookings) ? bookings : [];
-        const pendingBookings = b.filter(x => x.status === 'pending');
+        const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(user?.role);
+        
+        const canApproveBooking = (bookingItem) => {
+          if (!user) return false;
+          if (user.role === 'super-admin' || user.role === 'admin') return true;
+          
+          if (bookingItem.status === 'pending_hod') {
+            const bDept = bookingItem.department || bookingItem.user?.department;
+            return user.role === 'hod' && user.department === bDept;
+          }
+          if (bookingItem.status === 'pending_principal') {
+            return user.role === 'principal';
+          }
+          if (bookingItem.status === 'pending_ao') {
+            return user.role === 'ao';
+          }
+          if (bookingItem.status === 'pending_transport') {
+            return user.role === 'transport_manager';
+          }
+          if (bookingItem.status === 'pending_warden') {
+            return user.role === 'hostel_warden';
+          }
+          return false;
+        };
+
+        const isPending = (status) => ['pending', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(status);
+        
+        const pendingBookings = b.filter(x => {
+          if (isWorkflowApprover) {
+            return isPending(x.status) && canApproveBooking(x);
+          }
+          return isPending(x.status);
+        });
+
         setStats({
           halls: Array.isArray(halls) ? halls.length : 0,
           vehicles: Array.isArray(vehicles) ? vehicles.length : 0,
@@ -82,33 +115,44 @@ export default function AdminDashboard() {
     return { date, time, info, resourceName };
   };
 
-  const STAT_CARDS = [
-    { icon: '🏛️', label: 'Total Halls', value: stats.halls, gradient: 'from-violet-500 to-indigo-650', shadow: 'shadow-indigo-500/15' },
-    { icon: '🚗', label: 'Total Vehicles', value: stats.vehicles, gradient: 'from-sky-500 to-blue-650', shadow: 'shadow-blue-500/15' },
-    { icon: '🏨', label: 'Total Rooms', value: stats.rooms, gradient: 'from-emerald-500 to-teal-650', shadow: 'shadow-emerald-500/15' },
-    { icon: '📅', label: 'Total Bookings', value: stats.totalBookings, gradient: 'from-amber-500 to-orange-650', shadow: 'shadow-amber-500/15' },
-  ];
+  const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(currentUser?.role);
+
+  const STAT_CARDS = isWorkflowApprover 
+    ? [
+        { icon: '⏳', label: 'Awaiting Your Approval', value: stats.pendingCount, gradient: 'from-amber-500 to-orange-650', shadow: 'shadow-indigo-500/15' },
+        { icon: '📅', label: 'System Booking Volume', value: stats.totalBookings, gradient: 'from-indigo-500 to-indigo-650', shadow: 'shadow-indigo-500/15' }
+      ]
+    : [
+        { icon: '🏛️', label: 'Total Halls', value: stats.halls, gradient: 'from-violet-500 to-indigo-650', shadow: 'shadow-indigo-500/15' },
+        { icon: '🚗', label: 'Total Vehicles', value: stats.vehicles, gradient: 'from-sky-500 to-blue-650', shadow: 'shadow-blue-500/15' },
+        { icon: '🏨', label: 'Total Rooms', value: stats.rooms, gradient: 'from-emerald-500 to-teal-650', shadow: 'shadow-emerald-500/15' },
+        { icon: '📅', label: 'Total Bookings', value: stats.totalBookings, gradient: 'from-amber-500 to-orange-650', shadow: 'shadow-amber-500/15' },
+      ];
 
   const isSuperAdmin = currentUser?.role === 'super-admin';
 
   let QUICK_TOOLS = [
-    { href: '/admin/bookings?type=hall', icon: '📋', label: 'Manage Bookings', sub: 'Review, filter & approve user requests', color: 'border-violet-100/80 hover:border-violet-300 hover:bg-violet-50/30 text-violet-600 bg-white' },
+    { href: '/admin/bookings', icon: '📋', label: 'Manage Bookings', sub: 'Review, filter & approve user requests', color: 'border-violet-100/80 hover:border-violet-300 hover:bg-violet-50/30 text-violet-600 bg-white' },
   ];
 
   if (isSuperAdmin) {
     QUICK_TOOLS.unshift({ href: '/admin/super-admin', icon: '👑', label: 'Super Admin Panel', sub: 'Configure administrators, user permissions & settings', color: 'border-purple-100/80 hover:border-purple-300 hover:bg-purple-50/30 text-purple-600 bg-white' });
   }
-  if (currentUser?.role === 'super-admin' || currentUser?.assignedServices?.includes('halls') || currentUser?.permissions?.hallAccess !== false) {
-    QUICK_TOOLS.push({ href: '/admin/halls', icon: '🏢', label: 'Halls Inventory', sub: 'Add, update or delete event halls data', color: 'border-indigo-100/80 hover:border-indigo-300 hover:bg-indigo-50/30 text-indigo-600 bg-white' });
-    QUICK_TOOLS.push({ href: '/halls', icon: '🏛️', label: 'Book a Hall', sub: 'Access portal to book seminar/conference halls', color: 'border-amber-100/80 hover:border-amber-300 hover:bg-amber-50/30 text-amber-600 bg-white' });
-  }
-  if (currentUser?.role === 'super-admin' || currentUser?.assignedServices?.includes('vehicles') || currentUser?.permissions?.vehicleAccess !== false) {
-    QUICK_TOOLS.push({ href: '/admin/vehicles', icon: '🚗', label: 'Vehicles Inventory', sub: 'Manage vehicle types and registrations', color: 'border-sky-100/80 hover:border-sky-300 hover:bg-sky-50/30 text-sky-600 bg-white' });
-    QUICK_TOOLS.push({ href: '/vehicle-booking', icon: '🚗', label: 'Book a Vehicle', sub: 'Access portal to reserve campus vehicles', color: 'border-blue-100/80 hover:border-blue-300 hover:bg-blue-50/30 text-blue-600 bg-white' });
-  }
-  if (currentUser?.role === 'super-admin' || currentUser?.assignedServices?.includes('rooms') || currentUser?.permissions?.guestRoomAccess !== false) {
-    QUICK_TOOLS.push({ href: '/admin/rooms', icon: '🏨', label: 'Rooms Inventory', sub: 'Control hostel accommodation statuses', color: 'border-emerald-100/80 hover:border-emerald-300 hover:bg-emerald-50/30 text-emerald-600 bg-white' });
-    QUICK_TOOLS.push({ href: '/room-booking', icon: '🛏️', label: 'Book a Room', sub: 'Access portal to reserve hostel/guest rooms', color: 'border-teal-100/80 hover:border-teal-300 hover:bg-teal-50/30 text-teal-600 bg-white' });
+
+  // Only expose asset inventories and booking portal redirects to non-approver admin roles
+  if (!isWorkflowApprover) {
+    if (currentUser?.role === 'super-admin' || currentUser?.assignedServices?.includes('halls') || currentUser?.permissions?.hallAccess !== false) {
+      QUICK_TOOLS.push({ href: '/admin/halls', icon: '🏢', label: 'Halls Inventory', sub: 'Add, update or delete event halls data', color: 'border-indigo-100/80 hover:border-indigo-300 hover:bg-indigo-50/30 text-indigo-600 bg-white' });
+      QUICK_TOOLS.push({ href: '/halls', icon: '🏛️', label: 'Book a Hall', sub: 'Access portal to book seminar/conference halls', color: 'border-amber-100/80 hover:border-amber-300 hover:bg-amber-50/30 text-amber-600 bg-white' });
+    }
+    if (currentUser?.role === 'super-admin' || currentUser?.assignedServices?.includes('vehicles') || currentUser?.permissions?.vehicleAccess !== false) {
+      QUICK_TOOLS.push({ href: '/admin/vehicles', icon: '🚗', label: 'Vehicles Inventory', sub: 'Manage vehicle types and registrations', color: 'border-sky-100/80 hover:border-sky-300 hover:bg-sky-50/30 text-sky-600 bg-white' });
+      QUICK_TOOLS.push({ href: '/vehicle-booking', icon: '🚗', label: 'Book a Vehicle', sub: 'Access portal to reserve campus vehicles', color: 'border-blue-100/80 hover:border-blue-300 hover:bg-blue-50/30 text-blue-600 bg-white' });
+    }
+    if (currentUser?.role === 'super-admin' || currentUser?.assignedServices?.includes('rooms') || currentUser?.permissions?.guestRoomAccess !== false) {
+      QUICK_TOOLS.push({ href: '/admin/rooms', icon: '🏨', label: 'Rooms Inventory', sub: 'Control hostel accommodation statuses', color: 'border-emerald-100/80 hover:border-emerald-300 hover:bg-emerald-50/30 text-emerald-600 bg-white' });
+      QUICK_TOOLS.push({ href: '/room-booking', icon: '🛏️', label: 'Book a Room', sub: 'Access portal to reserve hostel/guest rooms', color: 'border-teal-100/80 hover:border-teal-300 hover:bg-teal-50/30 text-teal-600 bg-white' });
+    }
   }
 
   if (loading) {

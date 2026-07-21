@@ -616,10 +616,37 @@ export default function SuperAdminDashboard() {
                         onChange={(e) => { if (showUserModal?._id) handleUpdateUserPermissions(showUserModal._id, { role: e.target.value }) }}
                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all shadow-sm cursor-pointer"
                       >
-                        <option value="user">User</option>
+                        <option value="user">Faculty</option>
                         <option value="admin">Admin</option>
+                        <option value="hod">HOD</option>
+                        <option value="principal">Principal</option>
+                        <option value="ao">Administrative Officer (AO)</option>
+                        <option value="transport_manager">Transport Manager</option>
+                        <option value="hostel_warden">Hostel Warden</option>
                       </select>
                     </div>
+
+                    {showUserModal?.role === 'hod' && (
+                      <div className="mb-6">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Department Assignment</label>
+                        <select
+                          value={showUserModal?.department || ''}
+                          onChange={(e) => { if (showUserModal?._id) handleUpdateUserPermissions(showUserModal._id, { department: e.target.value }) }}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all shadow-sm cursor-pointer"
+                        >
+                          <option value="">Select Department</option>
+                          <option value="CSE">CSE</option>
+                          <option value="ECE">ECE</option>
+                          <option value="EEE">EEE</option>
+                          <option value="MECH">MECH</option>
+                          <option value="IT">IT</option>
+                          <option value="CIVIL">CIVIL</option>
+                          <option value="MCA">MCA</option>
+                          <option value="AP/Chem/ECE">AP/Chem/ECE</option>
+                          <option value="SCIENCE & HUMANITIES">Science & Humanities</option>
+                        </select>
+                      </div>
+                    )}
 
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Service Access</h4>
                     <div className="space-y-2.5 mb-6">

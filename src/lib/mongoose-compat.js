@@ -179,48 +179,95 @@ async function populateResults(results, populateOpts) {
     const select = typeof opt === 'object' ? opt.select : null;
 
     for (const doc of docs) {
-      const refId = doc[path];
-      if (refId && typeof refId === 'string') {
-        let refModelName = null;
-        if (path === 'user' || path === 'actionBy') {
-          refModelName = 'User';
-        } else if (path === 'serviceId') {
-          if (doc.serviceType === 'hall') refModelName = 'Hall';
-          else if (doc.serviceType === 'vehicle') refModelName = 'Vehicle';
-          else if (doc.serviceType === 'room') refModelName = 'GuestRoom';
-        } else {
-          if (path === 'hall') refModelName = 'Hall';
-          if (path === 'vehicle') refModelName = 'Vehicle';
-          if (path === 'room') refModelName = 'GuestRoom';
-        }
-
-        if (refModelName) {
-          const RefModel = modelsRegistry[refModelName];
-          if (RefModel) {
-            const refDoc = await RefModel.findById(refId);
-            if (refDoc) {
-              const plainDoc = refDoc.toObject ? refDoc.toObject() : refDoc;
-              if (select) {
-                const fields = select.split(' ').filter(f => f);
-                const filtered = {};
-                // If it starts with minus, exclude them. Else include only them.
-                const excludes = fields.filter(f => f.startsWith('-')).map(f => f.slice(1));
-                const includes = fields.filter(f => !f.startsWith('-'));
-
-                if (excludes.length > 0) {
-                  for (const [k, v] of Object.entries(plainDoc)) {
-                    if (!excludes.includes(k)) filtered[k] = v;
-                  }
-                } else {
-                  for (const f of includes) {
-                    filtered[f] = plainDoc[f];
+      if (path.includes('.')) {
+        const parts = path.split('.');
+        const parentKey = parts[0];
+        const childKey = parts[1];
+        
+        const parentVal = doc[parentKey];
+        if (Array.isArray(parentVal)) {
+          for (const item of parentVal) {
+            const refId = item[childKey];
+            if (refId && typeof refId === 'string') {
+              let refModelName = null;
+              if (childKey === 'approvedBy') {
+                refModelName = 'User';
+              }
+              if (refModelName) {
+                const RefModel = modelsRegistry[refModelName];
+                if (RefModel) {
+                  const refDoc = await RefModel.findById(refId);
+                  if (refDoc) {
+                    const plainDoc = refDoc.toObject ? refDoc.toObject() : refDoc;
+                    if (select) {
+                      const fields = select.split(' ').filter(f => f);
+                      const filtered = {};
+                      const excludes = fields.filter(f => f.startsWith('-')).map(f => f.slice(1));
+                      const includes = fields.filter(f => !f.startsWith('-'));
+                      if (excludes.length > 0) {
+                        for (const [k, v] of Object.entries(plainDoc)) {
+                          if (!excludes.includes(k)) filtered[k] = v;
+                        }
+                      } else {
+                        for (const f of includes) {
+                          filtered[f] = plainDoc[f];
+                        }
+                      }
+                      filtered.id = plainDoc.id;
+                      filtered._id = plainDoc._id;
+                      item[childKey] = filtered;
+                    } else {
+                      item[childKey] = plainDoc;
+                    }
                   }
                 }
-                filtered.id = plainDoc.id;
-                filtered._id = plainDoc._id;
-                doc[path] = filtered;
-              } else {
-                doc[path] = plainDoc;
+              }
+            }
+          }
+        }
+      } else {
+        const refId = doc[path];
+        if (refId && typeof refId === 'string') {
+          let refModelName = null;
+          if (path === 'user' || path === 'actionBy') {
+            refModelName = 'User';
+          } else if (path === 'serviceId') {
+            if (doc.serviceType === 'hall') refModelName = 'Hall';
+            else if (doc.serviceType === 'vehicle') refModelName = 'Vehicle';
+            else if (doc.serviceType === 'room') refModelName = 'GuestRoom';
+          } else {
+            if (path === 'hall') refModelName = 'Hall';
+            if (path === 'vehicle') refModelName = 'Vehicle';
+            if (path === 'room') refModelName = 'GuestRoom';
+          }
+
+          if (refModelName) {
+            const RefModel = modelsRegistry[refModelName];
+            if (RefModel) {
+              const refDoc = await RefModel.findById(refId);
+              if (refDoc) {
+                const plainDoc = refDoc.toObject ? refDoc.toObject() : refDoc;
+                if (select) {
+                  const fields = select.split(' ').filter(f => f);
+                  const filtered = {};
+                  const excludes = fields.filter(f => f.startsWith('-')).map(f => f.slice(1));
+                  const includes = fields.filter(f => !f.startsWith('-'));
+
+                  if (excludes.length > 0) {
+                    for (const [k, v] of Object.entries(plainDoc)) {
+                      if (!excludes.includes(k)) filtered[k] = v;
+                    }
+                  } else {
+                    for (const f of includes) {
+                      filtered[f] = plainDoc[f];
+                    }
+                  }
+                  filtered.id = plainDoc.id;
+                  filtered._id = plainDoc._id;
+                  doc[path] = filtered;
+                } else {
+                  doc[path] = plainDoc;
+                }
               }
             }
           }

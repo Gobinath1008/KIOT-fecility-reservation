@@ -38,9 +38,25 @@ export async function PUT(request) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 });
     }
 
+    const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(profileUser.role);
+    const isAdmin = profileUser.role === 'admin' || profileUser.role === 'super-admin';
+
     if (typeof name === 'string') profileUser.name = name.trim();
     if (typeof phone === 'string') profileUser.phone = phone.trim();
-    if (typeof department === 'string') profileUser.department = department.trim();
+
+    if (isWorkflowApprover || isAdmin) {
+      // HODs still need their assigned department for filters, but Principal, AO, Transport, Warden don't.
+      if (profileUser.role === 'hod') {
+        if (typeof department === 'string') profileUser.department = department.trim();
+      } else {
+        profileUser.department = ''; // Clear for principal, ao, transport, warden
+      }
+      profileUser.courseType = ''; // Clear courseType for all admins/approvers
+    } else {
+      if (typeof department === 'string') profileUser.department = department.trim();
+      if (body.courseType !== undefined) profileUser.courseType = body.courseType;
+    }
+
     if (typeof address === 'string') profileUser.address = address.trim();
     if (typeof city === 'string') profileUser.city = city.trim();
     if (typeof state === 'string') profileUser.state = state.trim();

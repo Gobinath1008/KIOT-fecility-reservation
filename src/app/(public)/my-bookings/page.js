@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import homeStyles from '@/app/(public)/home.module.css';
@@ -65,6 +66,19 @@ export default function MyBookingsPage() {
       setLoading(false);
     }
   }, []);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(res => res.ok ? res.json() : null)
+      .then(me => {
+        if (me && ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(me.role)) {
+          router.push('/admin');
+        }
+      })
+      .catch(err => console.error(err));
+  }, [router]);
 
   useEffect(() => {
     fetchBookings();
@@ -154,12 +168,16 @@ const formatDateTime = (value) => {
     }
   };
 
-  const filtered = (activeTab === 'all' ? bookings : bookings.filter(b => b.status === activeTab))
+  const isPending = (status) => ['pending', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(status);
+
+  const filtered = (activeTab === 'all' ? bookings : 
+                    activeTab === 'pending' ? bookings.filter(b => isPending(b.status)) :
+                    bookings.filter(b => b.status === activeTab))
     .filter(b => activeService === 'all' || b.serviceType === activeService);
 
   const counts = {
     all: bookings.length,
-    pending: bookings.filter(b => b.status === 'pending').length,
+    pending: bookings.filter(b => isPending(b.status)).length,
     approved: bookings.filter(b => b.status === 'approved').length,
     rejected: bookings.filter(b => b.status === 'rejected').length,
     cancelled: bookings.filter(b => b.status === 'cancelled').length
@@ -263,6 +281,11 @@ const formatDateTime = (value) => {
                               {details.location}
                             </div>
                             <div className={styles.bookingPurpose}>{details.description}</div>
+                            {b.serviceType === 'vehicle' && b.status === 'approved' && b.driverName && (
+                              <div style={{ marginTop: 8, padding: '8px 12px', fontSize: '0.85rem', background: '#eff6ff', borderLeft: '3px solid #3b82f6', borderRadius: 4, color: '#1e3a8a' }}>
+                                👨‍✈️ Driver: <strong>{b.driverName}</strong> ({b.driverPhone}) | Vehicle: <strong>{b.assignedVehicleNumber}</strong>
+                              </div>
+                            )}
                             <div style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '6px' }}>
                               👤 <strong>{b.guestName || b.user?.name || 'Unknown'}{(b.user?.department || b.department) ? ` (${b.user?.department || b.department})` : ''}</strong>
                               {(b.guestPhone || b.user?.phone) ? ` • 📞 ${b.guestPhone || b.user?.phone}` : ''}

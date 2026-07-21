@@ -35,7 +35,6 @@ export async function GET(request) {
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: 'i' } },
-      { driverMobile: { $regex: search, $options: 'i' } },
       { registrationNumber: { $regex: search, $options: 'i' } },
     ];
   }
@@ -51,7 +50,7 @@ export async function POST(request) {
   
   await connectDB();
   const body = await request.json();
-  const { name, vehicleType, registrationNumber, driverMobile, capacity, location, city, state } = body;
+  const { name, vehicleType, registrationNumber, capacity, location, city, state } = body;
 
   if (!name || !vehicleType || !registrationNumber || capacity === undefined || !location) {
     return NextResponse.json({ message: 'Required fields are missing' }, { status: 400 });
@@ -66,7 +65,6 @@ export async function POST(request) {
     name,
     vehicleType,
     registrationNumber,
-    driverMobile,
     capacity,
     location,
     city,

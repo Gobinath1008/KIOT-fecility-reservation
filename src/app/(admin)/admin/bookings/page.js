@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import styles from './bookings.module.css';
 import { openBookingPrintWindow } from '../../../../lib/bookingPrint';
+import { matchDepartment } from '../../../../lib/deptMatcher';
 
 const STATUS_TABS = ['all', 'pending', 'approved', 'rejected', 'cancelled'];
 const SERVICE_TYPES = ['all', 'hall', 'vehicle', 'room'];
@@ -126,12 +127,31 @@ function ManageBookingsContent() {
     setConfirmModal(true);
   };
 
-  const handleDecision = async (status) => {
+  const [driverName, setDriverName] = useState('');
+  const [driverPhone, setDriverPhone] = useState('');
+  const [assignedVehicleNumber, setAssignedVehicleNumber] = useState('');
+  const [totalKm, setTotalKm] = useState('');
+
+  const handleDecision = async (action) => {
+    if (action === 'approve' && selected.status === 'pending_transport') {
+      const cleanPhone = driverPhone.replace(/\D/g, '');
+      if (cleanPhone.length !== 10) {
+        alert('Please enter a valid 10-digit driver mobile number.');
+        return;
+      }
+    }
     setUpdating(true);
     try {
-      const res = await fetch(`/api/bookings/${selected._id}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, adminNote }),
+      const res = await fetch(`/api/bookings/${selected._id}/approve`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          comment: adminNote,
+          driverName,
+          driverPhone,
+          assignedVehicleNumber,
+          totalKm
+        }),
       });
       const data = await res.json();
       if (!res.ok) { alert(data.message); return; }
@@ -165,21 +185,101 @@ function ManageBookingsContent() {
     });
   };
 
-  const showHall = !user || user.role === 'super-admin' || user.role === 'admin';
-  const showVehicle = !user || user.role === 'super-admin' || user.role === 'admin';
-  const showRoom = !user || user.role === 'super-admin' || user.role === 'admin';
+  const isHOD = user?.role === 'hod';
+  const isPrincipal = user?.role === 'principal';
+  const isAO = user?.role === 'ao';
+  const isTransport = user?.role === 'transport_manager';
+  const isWarden = user?.role === 'hostel_warden';
+
+  const showHall = !user || user.role === 'super-admin' || user.role === 'admin' || isHOD || isPrincipal || isAO;
+  const showVehicle = !user || user.role === 'super-admin' || user.role === 'admin' || isHOD || isPrincipal || isAO || isTransport;
+  const showRoom = !user || user.role === 'super-admin' || user.role === 'admin' || isHOD || isPrincipal || isAO || isWarden;
 
   const allowedServiceTypes = ['all'];
   if (showHall) allowedServiceTypes.push('hall');
   if (showVehicle) allowedServiceTypes.push('vehicle');
   if (showRoom) allowedServiceTypes.push('room');
 
-  const filtered = (activeTab === 'all' ? bookings : bookings.filter(b => b.status === activeTab))
-    .filter(b => activeService === 'all' || b.serviceType === activeService);
+  const isPending = (status) => ['pending', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(status);
+
+  const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(user?.role);
+
+  const canApproveBooking = (b) => {
+    if (!user) return false;
+    if (user.role === 'super-admin' || user.role === 'admin') return true;
+    
+    if (b.status === 'pending_hod') {
+      const bDept = b.department || b.user?.department || '';
+      const userDept = user.department || '';
+      return user.role === 'hod' && matchDepartment(userDept, bDept);
+    }
+    if (b.status === 'pending_principal') {
+      return user.role === 'principal';
+    }
+    if (b.status === 'pending_ao') {
+      return user.role === 'ao';
+    }
+    if (b.status === 'pending_transport') {
+      return user.role === 'transport_manager';
+    }
+    if (b.status === 'pending_warden') {
+      return user.role === 'hostel_warden';
+    }
+    return false;
+  };
+
+  const didApproveOrReject = (b) => {
+    if (!user) return false;
+    return (b.approvals || []).some(ap => ap.approvedBy?._id === user.id || ap.approvedBy === user.id);
+  };
+
+  const filtered = (activeTab === 'all' ? bookings : 
+                    activeTab === 'pending' ? bookings.filter(b => isPending(b.status)) :
+                    bookings.filter(b => b.status === activeTab))
+    .filter(b => activeService === 'all' || b.serviceType === activeService)
+    .filter(b => {
+      if (isWorkflowApprover) {
+        if (activeTab === 'pending') {
+          return canApproveBooking(b);
+        }
+        if (activeTab === 'approved' || activeTab === 'rejected') {
+          return didApproveOrReject(b);
+        }
+        return canApproveBooking(b) || didApproveOrReject(b);
+      }
+      return true;
+    });
   
-  const counts = { all: bookings.length, pending: bookings.filter(b => b.status === 'pending').length, approved: bookings.filter(b => b.status === 'approved').length, rejected: bookings.filter(b => b.status === 'rejected').length, cancelled: bookings.filter(b => b.status === 'cancelled').length };
+  const counts = { 
+    all: bookings.filter(b => {
+      if (isWorkflowApprover) {
+        return (isPending(b.status) && canApproveBooking(b)) || didApproveOrReject(b);
+      }
+      return true;
+    }).length, 
+    pending: bookings.filter(b => isPending(b.status) && (!isWorkflowApprover || canApproveBooking(b))).length, 
+    approved: bookings.filter(b => b.status === 'approved' && (!isWorkflowApprover || didApproveOrReject(b))).length, 
+    rejected: bookings.filter(b => b.status === 'rejected' && (!isWorkflowApprover || didApproveOrReject(b))).length, 
+    cancelled: bookings.filter(b => b.status === 'cancelled' && !isWorkflowApprover).length 
+  };
   
-  const serviceCounts = { all: bookings.length, hall: bookings.filter(b => b.serviceType === 'hall').length, vehicle: bookings.filter(b => b.serviceType === 'vehicle').length, room: bookings.filter(b => b.serviceType === 'room').length };
+  const serviceCounts = { 
+    all: filtered.length, 
+    hall: filtered.filter(b => b.serviceType === 'hall').length, 
+    vehicle: filtered.filter(b => b.serviceType === 'vehicle').length, 
+    room: filtered.filter(b => b.serviceType === 'room').length 
+  };
+  
+  // Set default active tab for approver roles to 'pending'
+  useEffect(() => {
+    if (isWorkflowApprover && activeTab === 'all') {
+      setActiveTab('pending');
+    }
+  }, [isWorkflowApprover, activeTab]);
+
+  const visibleStatusTabs = isWorkflowApprover 
+    ? ['pending', 'approved', 'rejected'] 
+    : STATUS_TABS;
 
   return (
     <div className={styles.page}>
@@ -187,7 +287,7 @@ function ManageBookingsContent() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div className="page-header">
             <h1 className="page-title">Manage Bookings</h1>
-            <p className="page-subtitle">{bookings.length} total requests</p>
+            <p className="page-subtitle">{filtered.length} requests available</p>
           </div>
           <button onClick={handlePrint} className="btn-secondary" style={{ whiteSpace: 'nowrap' }}>
             🖨️ Print Report
@@ -195,7 +295,7 @@ function ManageBookingsContent() {
         </div>
 
         <div className="tabs">
-          {STATUS_TABS.map(tab => (
+          {visibleStatusTabs.map(tab => (
             <button key={tab} className={`tab-btn ${activeTab === tab ? 'active' : ''}`}
               onClick={() => setActiveTab(tab)}>
               {tab === 'all' ? 'All' : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -232,18 +332,26 @@ function ManageBookingsContent() {
           <div className={styles.list}>
             {filtered.map((b) => {
               const bookingPurpose = b.purpose || b.roomPurpose || b.specialRequests;
+              const showActionAlert = isPending(b.status) && canApproveBooking(b);
               return (
-                <div key={b._id} className={styles.card} onClick={() => openReview(b)} style={{ cursor: 'pointer' }}>
+                <div key={b._id} className={`${styles.card} ${showActionAlert ? styles.actionRequiredCard : ''}`} onClick={() => openReview(b)} style={{ cursor: 'pointer', borderLeft: showActionAlert ? '4px solid #3b82f6' : undefined }}>
                   <div className={styles.cardTop}>
                     <div className={styles.userInfo}>
                       <div className={styles.avatar}>{b.user?.name?.[0]?.toUpperCase()}</div>
                       <div>
                         <div className={styles.userName}>{b.user?.name || b.guestName || 'Unknown'}{(b.user?.department || b.department) ? ` (${b.user?.department || b.department})` : ''}</div>
-                        <div className={styles.userMeta}>{b.user?.department || b.user?.role}</div>
+                        <div className={styles.userMeta}>
+                          {b.user?.department || b.user?.role}
+                          {showActionAlert && <span style={{ marginLeft: 8, color: '#2563eb', fontWeight: 'bold', fontSize: 11 }}>⚠️ Requires Your Action</span>}
+                        </div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <span className={`badge ${STATUS_COLORS[getRealTimeStatus(b)]}`}>{getRealTimeStatus(b) === 'live' ? 'In Progress' : getRealTimeStatus(b).charAt(0).toUpperCase() + getRealTimeStatus(b).slice(1)}</span>
+                      <span className={`badge ${STATUS_COLORS[getRealTimeStatus(b)]}`}>
+                        {getRealTimeStatus(b) === 'live' ? 'In Progress' : 
+                         isPending(b.status) ? `Pending (${b.status.replace('pending_', '').toUpperCase()})` : 
+                         getRealTimeStatus(b).charAt(0).toUpperCase() + getRealTimeStatus(b).slice(1)}
+                      </span>
                       {b.status !== 'cancelled' && b.status !== 'rejected' && (
                         <button className="btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); setSelected(b); setCancelReason(b.adminNote || ''); setPendingAction('cancel'); setConfirmModal(true); }} title="Cancel this booking">
                           🗑️
@@ -272,8 +380,13 @@ function ManageBookingsContent() {
                         </>
                       )}
                     </div>
+                    {b.serviceType === 'vehicle' && b.driverName && (
+                      <div style={{ marginTop: 8, padding: '6px 10px', fontSize: 13, background: 'rgba(59,130,246,0.06)', borderRadius: 4, borderLeft: '3px solid #3b82f6' }}>
+                        👨‍✈️ Driver: <strong>{b.driverName}</strong> ({b.driverPhone}) | 🚗 Vehicle No: <strong>{b.assignedVehicleNumber}</strong>
+                      </div>
+                    )}
                     <div className={styles.purpose}>📋 {bookingPurpose ? `Purpose: ${bookingPurpose}` : 'No purpose provided'}</div>
-                    {b.actionBy && b.status !== 'pending' && (
+                    {b.actionBy && b.status !== 'pending' && !isPending(b.status) && (
                       <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
                         {b.status === 'approved' ? '✅ Approved by: ' : b.status === 'rejected' ? '❌ Rejected by: ' : '🗑️ Cancelled by: '} 
                         <strong>{b.actionBy?.name || 'Admin'}</strong>
@@ -288,7 +401,7 @@ function ManageBookingsContent() {
                       </div>
                     )}
                   </div>
-                  <div className={styles.actionHint}>{b.status === 'pending' ? 'Click to review →' : 'View details →'}</div>
+                  <div className={styles.actionHint}>{isPending(b.status) ? 'Click to review stage →' : 'View details →'}</div>
                 </div>
               );
             })}
@@ -305,57 +418,204 @@ function ManageBookingsContent() {
               <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
             
-            <div className={styles.summaryBox}>
-              <div className={styles.summaryRow}><span>User</span><strong>{selected.user?.name || selected.guestName || 'Unknown'}{(selected.user?.department || selected.department) ? ` (${selected.user?.department || selected.department})` : ''} ({selected.user?.role || 'Guest'})</strong></div>
-              <div className={styles.summaryRow}><span>Service</span><strong>{selected.serviceType === 'vehicle' ? '🚗 Vehicle' : selected.serviceType === 'room' ? '🏨 Room' : '🏛️ Hall'}</strong></div>
-              <div className={styles.summaryRow}>
-                <span>Target</span>
-                <strong>
-                  {selected.serviceType === 'vehicle' ? 
-                    `${selected.serviceId?.name || 'Vehicle'} (${selected.serviceId?.registrationNumber || 'N/A'})` :
-                   selected.serviceType === 'room' ? 
-                    `${selected.serviceId?.name || 'Room'} #${selected.serviceId?.roomNumber || 'N/A'}` :
-                   selected.serviceId?.name || 'N/A'}
-                </strong>
-              </div>
-              {selected.serviceType === 'room' ? (
-                <>
-                  <div className={styles.summaryRow}><span>Check-in Date</span><strong>{selected.roomCheckInDate}</strong></div>
-                  <div className={styles.summaryRow}><span>Check-in Time</span><strong>{formatTime12h(selected.roomCheckInTime || '14:00')}</strong></div>
-                  <div className={styles.summaryRow}><span>Check-out Date</span><strong>{selected.roomCheckOutDate}</strong></div>
-                  <div className={styles.summaryRow}><span>Check-out Time</span><strong>{formatTime12h(selected.roomCheckOutTime || '12:00')}</strong></div>
-                </>
+            <div className={styles.summaryBox} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px' }}>
+              
+              {selected.serviceType === 'vehicle' ? (
+                /* VEHICLE REQUEST FORM DIGITAL REPRODUCTION */
+                <div style={{ fontFamily: 'monospace, sans-serif', color: '#1e293b' }}>
+                  <div style={{ textAlign: 'center', borderBottom: '2px double #475569', paddingBottom: '12px', marginBottom: '16px' }}>
+                    <h3 style={{ margin: '0', fontSize: '16px', fontWeight: 'bold', letterSpacing: '1px' }}>KNOWLEDGE INSTITUTE OF TECHNOLOGY</h3>
+                    <span style={{ fontSize: '12px' }}>SALEM - 637 504 | VEHICLE REQUEST FORM</span>
+                  </div>
+                  
+                  <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', marginBottom: '16px' }}>
+                    <tbody>
+                      <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>DEPT:</td><td>{selected.department || selected.user?.department || 'PAS & JR'}</td></tr>
+                      <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>FACULTY NAME:</td><td>{selected.guestName || selected.user?.name}</td></tr>
+                      <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>CHIEF GUEST/PROGRAMME:</td><td>{selected.purpose || 'BUY TO LUNCH / OFFICIAL TRIP'}</td></tr>
+                      <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>VEHICLE TYPE:</td><td>🚗 {selected.serviceId?.name || 'CAR / BUS / JEEP'}</td></tr>
+                      <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>ONWARD JOURNEY:</td><td>📅 {selected.date || selected.vehiclePickupDate} at {formatTime12h(selected.startTime || selected.vehiclePickupTime || '09:00')}</td></tr>
+                      <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>RETURN JOURNEY:</td><td>📅 {selected.vehicleReturnDate || selected.date} at {formatTime12h(selected.vehicleReturnTime || '17:00')}</td></tr>
+                      {selected.driverName && (
+                        <>
+                          <tr style={{ borderBottom: '1px dashed #cbd5e1', color: '#1e3a8a', fontWeight: 'bold' }}><td style={{ padding: '6px 0' }}>DRIVER NAME:</td><td>👨‍✈️ {selected.driverName}</td></tr>
+                          <tr style={{ borderBottom: '1px dashed #cbd5e1', color: '#1e3a8a', fontWeight: 'bold' }}><td style={{ padding: '6px 0' }}>DRIVER PHONE:</td><td>📞 {selected.driverPhone}</td></tr>
+                          <tr style={{ borderBottom: '1px dashed #cbd5e1', color: '#1e3a8a', fontWeight: 'bold' }}><td style={{ padding: '6px 0' }}>TOTAL KM:</td><td>📏 {selected.totalKm || 'N/A'}</td></tr>
+                        </>
+                      )}
+                    </tbody>
+                  </table>
+
+                  <div style={{ marginTop: '20px', borderTop: '1px solid #94a3b8', paddingTop: '12px' }}>
+                    <h5 style={{ margin: '0 0 10px 0', fontSize: '11px', textTransform: 'uppercase', color: '#64748b' }}>Workflow Approvals Checklist:</h5>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>HOD</div>
+                        <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                      </div>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>PRINCIPAL</div>
+                        <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'Principal') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                      </div>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>AO</div>
+                        <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'Administrative Officer (AO)') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                      </div>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>TRANS. MGR</div>
+                        <strong style={{ color: '#10b981' }}>{selected.status === 'approved' ? '✓ ALLOCATED' : '⏳ PENDING'}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : selected.serviceType === 'room' ? (
+                /* GUEST ACCOMMODATION REQUISITION FORM DIGITAL REPRODUCTION */
+                <div style={{ fontFamily: 'Georgia, serif', color: '#1e293b' }}>
+                  <div style={{ textAlign: 'center', borderBottom: '2px solid #334155', paddingBottom: '8px', marginBottom: '16px' }}>
+                    <h3 style={{ margin: '0', fontSize: '18px', fontWeight: 'bold' }}>REQUISITION FOR GUEST ACCOMMODATION</h3>
+                    <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#64748b' }}>KIOT HOSTEL & ACCOMMODATION LOGS</span>
+                  </div>
+
+                  <div style={{ fontSize: '12px', lineHeight: '1.6', marginBottom: '16px' }}>
+                    <p style={{ margin: '4px 0' }}><strong>FROM:</strong> {selected.user?.name || selected.guestName} (AP/Chem/ECE)</p>
+                    <p style={{ margin: '4px 0' }}><strong>TO:</strong> The Principal, KIOT</p>
+                    <p style={{ margin: '8px 0', borderLeft: '3px solid #64748b', paddingLeft: '8px', fontStyle: 'italic' }}>
+                      <strong>Sub:</strong> Requisition for Guest Accommodation & Food Reg.
+                    </p>
+                    <p style={{ margin: '4px 0', textIndent: '20px' }}>
+                      We request you to provide food & accommodation in <strong>A-Block / Gents Hostel</strong> as mentioned below:
+                    </p>
+                  </div>
+
+                  <table style={{ width: '100%', fontSize: '11px', border: '1px solid #cbd5e1', borderCollapse: 'collapse', textAlign: 'center' }}>
+                    <thead>
+                      <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
+                        <th style={{ padding: '6px', borderRight: '1px solid #cbd5e1' }}>Date range</th>
+                        <th style={{ padding: '6px', borderRight: '1px solid #cbd5e1' }}>Trainers count</th>
+                        <th style={{ padding: '6px', borderRight: '1px solid #cbd5e1' }}>Room type / Location</th>
+                        <th style={{ padding: '6px' }}>Requirements</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style={{ padding: '8px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>{selected.roomCheckInDate} to {selected.roomCheckOutDate}</td>
+                        <td style={{ padding: '8px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>{selected.numberOfGuests || '1'} Male</td>
+                        <td style={{ padding: '8px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                          🏢 {selected.serviceId?.name || 'Gents Hostel AC Room'}
+                          {selected.serviceId?.roomNumber && (
+                            <div style={{ fontSize: '10px', color: '#1e3a8a', fontWeight: 'bold', marginTop: '4px' }}>
+                              Room {selected.serviceId.roomNumber} (Floor {selected.serviceId.floor || '0'})
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: '8px', borderBottom: '1px solid #cbd5e1' }}>Accommodation & Food</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div style={{ marginTop: '20px', borderTop: '1px solid #94a3b8', paddingTop: '12px' }}>
+                    <h5 style={{ margin: '0 0 10px 0', fontSize: '11px', textTransform: 'uppercase', color: '#64748b' }}>Workflow Approvals Checklist:</h5>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>HOD</div>
+                        <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                      </div>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>PRINCIPAL</div>
+                        <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'Principal') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                      </div>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>AO</div>
+                        <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'Administrative Officer (AO)') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                      </div>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>WARDEN</div>
+                        <strong style={{ color: '#10b981' }}>{selected.status === 'approved' ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <>
-                  <div className={styles.summaryRow}><span>Date</span><strong>{selected.date || selected.hallDate || selected.vehiclePickupDate}</strong></div>
-                  <div className={styles.summaryRow}><span>Time</span><strong>{formatTime12h(selected.startTime || selected.hallStartTime || selected.vehiclePickupTime) || 'N/A'} – {formatTime12h(selected.endTime || selected.hallEndTime || selected.vehicleReturnTime) || 'N/A'}</strong></div>
-                </>
+                /* STANDARD SEMINAR HALL BOOKING SUMMARY VIEW */
+                <div style={{ color: '#1e293b' }}>
+                  <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 'bold', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>🏛️ Seminar Hall Booking Requisition</h3>
+                  <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                    <tbody>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold', width: '140px' }}>Seminar Hall:</td><td>{selected.serviceId?.name || 'N/A'}</td></tr>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Faculty Name:</td><td>{selected.user?.name || 'N/A'}</td></tr>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Department:</td><td>{selected.department || selected.user?.department || 'N/A'}</td></tr>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Event Date:</td><td>{selected.date || selected.hallDate || 'N/A'}</td></tr>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Event Time:</td><td>{formatTime12h(selected.startTime || selected.hallStartTime)} – {formatTime12h(selected.endTime || selected.hallEndTime)}</td></tr>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Purpose:</td><td>{selected.purpose || 'N/A'}</td></tr>
+                      <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Expected Attendees:</td><td>{selected.attendees || 'N/A'}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
               )}
-              <div className={styles.summaryRow}><span>Purpose</span><strong>{selected.purpose || selected.roomPurpose || selected.specialRequests || 'No purpose'}</strong></div>
-              <div className={styles.summaryRow}><span>Guests</span><strong>{selected.attendees || selected.numberOfGuests || selected.serviceId?.capacity || 'N/A'}</strong></div>
-              {selected.actionBy && selected.status !== 'pending' && (
-                <div className={styles.summaryRow}><span>Reviewed By</span><strong>{selected.actionBy?.name || 'Admin'}{selected.actionAt ? ' — ' + formatDateTime(selected.actionAt) : ''}</strong></div>
-              )}
-              {selected.cancellationReason && (
-                <div className={styles.summaryRow}><span>Cancelled</span><strong>{selected.cancelledBy === 'admin' ? 'Admin' : 'User'}: {selected.cancellationReason}{selected.cancelledAt ? ' — ' + formatDateTime(selected.cancelledAt) : ''}</strong></div>
+              
+              {selected.approvals && selected.approvals.length > 0 && (
+                <div style={{ marginTop: 20, borderTop: '1px dashed #cbd5e1', paddingTop: 12 }}>
+                  <span style={{ fontSize: 13, fontWeight: 'bold', display: 'block', marginBottom: 8, color: '#334155' }}>Approval Trail Details:</span>
+                  {selected.approvals.map((ap, idx) => (
+                    <div key={idx} style={{ fontSize: 12, color: '#475569', marginBottom: 6 }}>
+                      ⏳ Stage <strong>{ap.stage}</strong>: {ap.status === 'approved' ? '✅ Approved' : '❌ Rejected'} {ap.approvedBy ? `by ${ap.approvedBy.name || 'Approver'}${ap.stage === 'HOD' && ap.approvedBy.department ? ` (${ap.approvedBy.department})` : ''}` : ''}
+                      {ap.comment && <div style={{ fontSize: 11, fontStyle: 'italic', marginLeft: 14, color: '#64748b' }}>"{ap.comment}"</div>}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
 
+            {/* Transport Manager Driver Allocation Form */}
+            {selected.status === 'pending_transport' && canApproveBooking(selected) && (
+              <div style={{ background: '#f3f4f6', padding: '16px', borderRadius: '8px', marginTop: '16px' }}>
+                <h4 style={{ margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px', color: '#1e3a8a' }}>👨‍✈️ Driver & Vehicle Allocation details</h4>
+                
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label className="form-label" style={{ fontSize: '12px' }}>Driver Name <span style={{ color: 'red' }}>*</span></label>
+                  <input type="text" className="form-input" placeholder="e.g. Mr. Kumar" value={driverName} onChange={e => setDriverName(e.target.value)} required />
+                </div>
+                
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label className="form-label" style={{ fontSize: '12px' }}>Driver Phone Number <span style={{ color: 'red' }}>*</span></label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="e.g. 9876543210" 
+                    value={driverPhone} 
+                    onChange={e => setDriverPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} 
+                    required 
+                  />
+                </div>
+                
+                <div className="form-group" style={{ marginBottom: '12px' }}>
+                  <label className="form-label" style={{ fontSize: '12px' }}>Total Kilometers <span style={{ color: 'red' }}>*</span></label>
+                  <input type="text" className="form-input" placeholder="e.g. 150 km" value={totalKm} onChange={e => setTotalKm(e.target.value)} required />
+                </div>
+              </div>
+            )}
+
             <div className="form-group" style={{ marginTop: 24 }}>
-              <label className="form-label">Admin Note (optional)</label>
-              <textarea className="form-input" rows={2} placeholder="Add a note for the user..."
+              <label className="form-label">Approver Note / Comment</label>
+              <textarea className="form-input" rows={2} placeholder="Add remarks or notes..."
                 value={adminNote} onChange={e => setAdminNote(e.target.value)} style={{ resize: 'vertical' }} />
             </div>
 
-            {selected.status === 'pending' ? (
-              <div className={styles.decisionBtns}>
-                <button className="btn-danger" onClick={() => showConfirmation('rejected')} disabled={updating}>
-                  ❌ Reject
-                </button>
-                <button className="btn-success" onClick={() => showConfirmation('approved')} disabled={updating}>
-                  ✅ Approve
-                </button>
-              </div>
+            {isPending(selected.status) ? (
+              canApproveBooking(selected) ? (
+                <div className={styles.decisionBtns}>
+                  <button className="btn-danger" onClick={() => showConfirmation('rejected')} disabled={updating}>
+                    ❌ Reject
+                  </button>
+                  <button className="btn-success" onClick={() => showConfirmation('approved')} disabled={updating}>
+                    ✅ {selected.status === 'pending_transport' ? '🚌 Allocate & Approve' : '✅ Approve'}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ marginTop: 16, fontSize: 13, color: 'var(--text-secondary)', fontStyle: 'italic', textAlign: 'center', background: 'rgba(0,0,0,0.02)', padding: '10px', borderRadius: '4px' }}>
+                  🔒 Waiting for <strong>{selected.status.replace('pending_', '').toUpperCase()}</strong> approval. You do not have authority to sign off this stage.
+                </div>
+              )
             ) : (
               <div style={{ marginTop: 16, fontSize: 14, color: 'var(--text-secondary)' }}>
                 This booking is already <strong>{selected.status}</strong> and cannot be reviewed again here.
@@ -404,7 +664,7 @@ function ManageBookingsContent() {
               </button>
               <button 
                 className={pendingAction === 'approved' ? 'btn-success' : pendingAction === 'cancel' ? 'btn-danger' : 'btn-danger'}
-                onClick={() => pendingAction === 'cancel' ? handleCancel() : handleDecision(pendingAction)}
+                onClick={() => pendingAction === 'cancel' ? handleCancel() : handleDecision(pendingAction === 'approved' ? 'approve' : 'reject')}
                 disabled={updating}
                 style={{ flex: 1 }}
               >

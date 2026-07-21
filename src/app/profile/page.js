@@ -13,11 +13,36 @@ export default function ProfilePage() {
     name: '',
     phone: '',
     department: '',
+    courseType: '',
     address: '',
     city: '',
     state: '',
     zipCode: '',
   });
+
+  const ugDepartments = [
+    "B.E Mechanical Engineering",
+    "B.E Electronics and Communication Engineering",
+    "B.E Electrical and Electronics Engineering",
+    "B.E Computer Science and Engineering",
+    "B.E Civil Engineering",
+    "B.Tech Information Technology",
+    "B.Tech Computer Science and Business Systems",
+    "B.Tech Artificial Intelligence and Data Science",
+    "B.E Electronics and Computer Engineering"
+  ];
+
+  const pgDepartments = [
+    "M.E Industrial Safety Engineering",
+    "M.E VLSI Design",
+    "M.E Automotive Electronics",
+    "M.E Embedded System Technologies",
+    "M.E Computer Science and Engineering",
+    "Master of Business Administration (MBA)",
+    "MCA – Master of Computer Applications",
+    "MBA in Innovation, Entrepreneurship & Venture Development (MBA-IEV)",
+    "M.E Software Engineering"
+  ];
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -34,10 +59,17 @@ export default function ProfilePage() {
 
         const data = await response.json();
         setProfile(data);
+        
+        // Detect if active department matches any PG list options to initialize courseType dropdown
+        const isPg = pgDepartments.includes(data.department);
+        const isUg = ugDepartments.includes(data.department);
+        const detectedCourseType = isPg ? 'PG' : (isUg ? 'UG' : '');
+
         setForm({
           name: data.name || '',
           phone: data.phone || '',
           department: data.department || '',
+          courseType: detectedCourseType,
           address: data.address || '',
           city: data.city || '',
           state: data.state || '',
@@ -55,7 +87,13 @@ export default function ProfilePage() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((current) => {
+      const updated = { ...current, [name]: value };
+      if (name === 'courseType') {
+        updated.department = ''; // Reset department choice when courseType switches
+      }
+      return updated;
+    });
   };
 
   const handleSubmit = async (event) => {
@@ -199,16 +237,41 @@ export default function ProfilePage() {
                 />
               </label>
 
-              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#334155', fontSize: 13, fontWeight: 700 }}>
-                Department
-                <input
-                  name="department"
-                  value={form.department}
-                  onChange={handleChange}
-                  placeholder="Department or unit"
-                  style={{ border: '1px solid #cbd5e1', borderRadius: 12, padding: '12px 13px', fontSize: 14, color: '#0f172a', outline: 'none' }}
-                />
-              </label>
+              {!['super-admin', 'admin', 'hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(profile?.role) && (
+                <>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#334155', fontSize: 13, fontWeight: 700 }}>
+                    Course Type
+                    <select
+                      name="courseType"
+                      value={form.courseType}
+                      onChange={handleChange}
+                      required
+                      style={{ border: '1px solid #cbd5e1', borderRadius: 12, padding: '12px 13px', fontSize: 14, color: '#0f172a', outline: 'none', background: '#fff' }}
+                    >
+                      <option value="">Select Course Type</option>
+                      <option value="UG">UG (Undergraduate)</option>
+                      <option value="PG">PG (Postgraduate)</option>
+                    </select>
+                  </label>
+
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#334155', fontSize: 13, fontWeight: 700 }}>
+                    Department
+                    <select
+                      name="department"
+                      value={form.department}
+                      onChange={handleChange}
+                      required
+                      disabled={!form.courseType}
+                      style={{ border: '1px solid #cbd5e1', borderRadius: 12, padding: '12px 13px', fontSize: 14, color: '#0f172a', outline: 'none', background: '#fff' }}
+                    >
+                      <option value="">Select Department</option>
+                      {(form.courseType === 'UG' ? ugDepartments : form.courseType === 'PG' ? pgDepartments : []).map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              )}
             </div>
 
             <label style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#334155', fontSize: 13, fontWeight: 700 }}>

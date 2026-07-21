@@ -112,7 +112,36 @@ export const buildBookingPrintHtml = (bookings, options = {}) => {
       `<div><strong>Booked by:</strong> ${escapeHtml(booking.guestName || booking.user?.name || 'Unknown')}${(booking.user?.department || booking.department) ? ` (${escapeHtml(booking.user?.department || booking.department)})` : ''}</div>`,
     ];
 
-    const actionInfo = booking.actionBy?.name && status !== 'pending'
+    if (booking.serviceType === 'vehicle' && booking.driverName) {
+      detailLines.push(
+        `<div style="font-size: 10.5px; color: #1e3a8a; font-weight: bold; margin-top: 4px; border-top: 1px dotted #cbd5e1; padding-top: 3px;">
+          👨‍✈️ Driver: ${escapeHtml(booking.driverName)} (📞 ${escapeHtml(booking.driverPhone || 'N/A')})<br/>
+          📏 Total KM: ${escapeHtml(booking.totalKm || 'N/A')}
+        </div>`
+      );
+    }
+
+    // Map approvals list trail to status labels
+    const approvalSteps = (booking.approvals || []).map(ap => {
+      const stageName = ap.stage || 'Approver';
+      const isApproved = ap.status === 'approved';
+      const actionLabel = isApproved ? '' : ' [REJECTED]';
+      const approverName = ap.approvedBy?.name || 'Authorized Signatory';
+      const timeStr = ap.approvedAt ? new Date(ap.approvedAt).toLocaleDateString() : '';
+
+      if (stageName === 'HOD') {
+        const deptSuffix = ap.approvedBy?.department ? ` (${ap.approvedBy.department})` : '';
+        return `<div style="font-size: 10px; color: #475569; margin-top: 3px; border-top: 1px dashed #e2e8f0; padding-top: 2px;">
+          HOD${actionLabel}: ${escapeHtml(approverName)}${escapeHtml(deptSuffix)}
+        </div>`;
+      }
+
+      return `<div style="font-size: 10px; color: #475569; margin-top: 3px; border-top: 1px dashed #e2e8f0; padding-top: 2px;">
+        ${escapeHtml(stageName)}${actionLabel}: ${escapeHtml(approverName)} ${timeStr ? `(${timeStr})` : ''}
+      </div>`;
+    }).join('');
+
+    const actionInfo = booking.actionBy?.name && status !== 'pending' && (!booking.approvals || booking.approvals.length === 0)
       ? `${status === 'approved' ? '<strong>Approved by:</strong>' : status === 'rejected' ? '<strong>Rejected by:</strong>' : '<strong>Cancelled by:</strong>'} ${escapeHtml(booking.actionBy.name)}${booking.actionAt ? ' — ' + formatDateTime(booking.actionAt) : ''}`
       : '';
     const cancelledInfo = !booking.actionBy?.name && status === 'cancelled' && booking.cancelledAt
@@ -129,7 +158,8 @@ export const buildBookingPrintHtml = (bookings, options = {}) => {
         <td class="details-cell">${detailLines.filter(Boolean).join('')}</td>
         <td>
           <span class="status ${escapeHtml(status)}">${escapeHtml(statusLabel)}</span>
-          ${statusInfo ? `<br/><small style="color: #666; font-size: 11px;">${statusInfo}</small>` : ''}
+          ${statusInfo ? `<small style="color: #666; font-size: 11px;">${statusInfo}</small>` : ''}
+          ${approvalSteps}
         </td>
       </tr>
     `;

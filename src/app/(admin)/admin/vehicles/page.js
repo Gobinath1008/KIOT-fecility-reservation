@@ -204,16 +204,6 @@ export default function VehiclesPage() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Driver Mobile Number</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. 9876543210"
-                    value={formData.driverMobile}
-                    onChange={(e) => setFormData({...formData, driverMobile: e.target.value})}
-                  />
-                </div>
-                <div className="form-group">
                   <label className="form-label">Capacity (seats)</label>
                   <input
                     type="number"
@@ -333,7 +323,6 @@ export default function VehiclesPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '8px 0', fontSize: '13px', color: '#4b5563' }}>
                       <div>📝 Reg: {vehicle.registrationNumber}</div>
                       <div>👥 Capacity: {vehicle.capacity} seats</div>
-                      {vehicle.driverMobile && <div>📞 Driver: {vehicle.driverMobile}</div>}
                       <div>📍 {vehicle.location}</div>
                       <div style={{ color: '#999', fontSize: '12px' }}>{vehicle.city}, {vehicle.state}</div>
                     </div>

@@ -9,6 +9,8 @@ import Vehicle from '@/models/Vehicle';
 import GuestRoom from '@/models/GuestRoom';
 import User from '@/models/User'; // Ensure User schema is registered before population
 import { requireAuth } from '@/lib/middleware';
+import { sendApprovalRequestEmail } from '@/lib/email';
+import { matchDepartment } from '@/lib/deptMatcher';
 
 const hasOverlap = (start1, end1, start2, end2) => {
   const dStart1 = new Date(start1);
@@ -47,24 +49,26 @@ export async function GET(request) {
 
   let query = {};
   const my = searchParams.get('my') === 'true';
+  const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(user?.role);
+  const isPrivileged = user?.role === 'super-admin' || user?.role === 'admin' || isWorkflowApprover;
 
   if (!all) {
     // If 'my=true' is explicitly passed OR the user is a standard user, return ONLY their own bookings
-    if (my || (user.role !== 'super-admin' && user.role !== 'admin')) {
+    if (my || !isPrivileged) {
       query.user = user.id;
       if (status) query.status = status;
     } else {
-      // admin / super-admin fetching without all=true (from the Manage Bookings page)
+      // admin / super-admin / approver fetching without all=true (from the Manage Bookings page)
       if (status) query.status = status;
       if (userId) query.user = userId;
     }
   } else {
     // fetching all bookings (e.g., checking availability)
     // If not logged in OR is a regular user/customer, they can only see approved bookings (pending don't block availability)
-    if (!user || (user.role !== 'super-admin' && user.role !== 'admin')) {
+    if (!user || !isPrivileged) {
       query.status = 'approved';
     } else {
-      // admin / super-admin can filter by status/userId
+      // admin / super-admin / approver can filter by status/userId
       if (status) query.status = status;
       if (userId) query.user = userId;
     }
@@ -73,7 +77,8 @@ export async function GET(request) {
   let halls = [], vehicles = [], rooms = [];
   const populateOpts = [
     { path: 'user', select: 'name email phone department role' },
-    { path: 'actionBy', select: 'name' }
+    { path: 'actionBy', select: 'name' },
+    { path: 'approvals.approvedBy', select: 'name department role' }
   ];
 
 
@@ -287,6 +292,7 @@ export async function POST(request) {
       guestEmail: guestEmail || currentUser.email,
       guestPhone: guestPhone || currentUser.phone,
       department: currentUser.department || '',
+      status: 'pending',
     });
   } else if (serviceType === 'vehicle') {
     createdBooking = await VehicleBooking.create({
@@ -306,6 +312,7 @@ export async function POST(request) {
       guestEmail: guestEmail || currentUser.email,
       guestPhone: guestPhone || currentUser.phone,
       department: currentUser.department || '',
+      status: 'pending_hod',
     });
   } else if (serviceType === 'room') {
     createdBooking = await RoomBooking.create({
@@ -322,9 +329,34 @@ export async function POST(request) {
       guestEmail: guestEmail || currentUser.email,
       guestPhone: guestPhone || currentUser.phone,
       department: currentUser.department || '',
+      status: 'pending_hod',
     });
   }
 
   const populated = await createdBooking.populate('user', 'name email phone department role');
+
+  // Trigger initial email to Department HOD for Vehicles/Rooms
+  if (serviceType === 'vehicle' || serviceType === 'room') {
+    try {
+      const HODs = await User.find({ role: 'hod' });
+      const deptHOD = HODs.find(hod => matchDepartment(hod.department, currentUser.department));
+      if (deptHOD && deptHOD.email) {
+        const origin = request.headers.get('origin') || 'http://localhost:3000';
+        await sendApprovalRequestEmail({
+          toEmail: deptHOD.email,
+          toName: deptHOD.name,
+          bookingType: serviceType,
+          bookingId: populated._id.toString(),
+          applicantName: populated.guestName || populated.user?.name,
+          applicantDept: populated.department || populated.user?.department || '',
+          stageName: 'HOD',
+          detailsLink: `${origin}/admin/bookings`
+        });
+      }
+    } catch (err) {
+      console.error('[WORKFLOW] Failed to send initial HOD email:', err);
+    }
+  }
+
   return NextResponse.json(populated, { status: 201 });
 }

@@ -20,21 +20,27 @@ export default function Navbar({ user }) {
   };
 
   const isSuperAdmin = user?.role === 'super-admin';
-  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
+  const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(user?.role);
+  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin' || isWorkflowApprover;
 
   const navLinks = [];
   if (user) {
     if (isAdmin) {
       navLinks.push(
         { href: '/admin', label: 'Dashboard', icon: '📊' },
-        { href: '/admin/halls', label: 'Halls', icon: '🏛️' },
-        { href: '/admin/vehicles', label: 'Vehicles', icon: '🚗' },
-        { href: '/admin/rooms', label: 'Rooms', icon: '🏨' },
-        { href: '/admin/bookings', label: 'Bookings', icon: '📋' },
       );
       if (isSuperAdmin) {
-        navLinks.splice(1, 0, { href: '/admin/super-admin', label: 'Super Admin', icon: '👑' });
+        navLinks.push({ href: '/admin/super-admin', label: 'Super Admin', icon: '👑' });
       }
+      // Only standard admin or super-admin manage inventories directly
+      if (!isWorkflowApprover) {
+        navLinks.push(
+          { href: '/admin/halls', label: 'Halls', icon: '🏛️' },
+          { href: '/admin/vehicles', label: 'Vehicles', icon: '🚗' },
+          { href: '/admin/rooms', label: 'Rooms', icon: '🏨' },
+        );
+      }
+      navLinks.push({ href: '/admin/bookings', label: 'Bookings', icon: '📋' });
     } else {
       navLinks.push({ href: '/', label: 'Home', icon: '🏠' });
       if (user.permissions?.hallAccess !== false) navLinks.push({ href: '/halls', label: 'Halls', icon: '🏛️' });
@@ -55,10 +61,25 @@ export default function Navbar({ user }) {
     if (isSuperAdmin) {
       return <span className={`${styles.roleBadge} ${styles.superAdminBadge}`}>👑 Super Admin</span>;
     }
-    if (isAdmin) {
+    if (user?.role === 'hod') {
+      return <span className={`${styles.roleBadge} ${styles.adminBadge}`}>🎓 HOD ({user.department || ''})</span>;
+    }
+    if (user?.role === 'principal') {
+      return <span className={`${styles.roleBadge} ${styles.adminBadge}`}>🏫 Principal</span>;
+    }
+    if (user?.role === 'ao') {
+      return <span className={`${styles.roleBadge} ${styles.adminBadge}`}>💼 AO</span>;
+    }
+    if (user?.role === 'transport_manager') {
+      return <span className={`${styles.roleBadge} ${styles.adminBadge}`}>🚌 Transport Mgr</span>;
+    }
+    if (user?.role === 'hostel_warden') {
+      return <span className={`${styles.roleBadge} ${styles.adminBadge}`}>🏨 Hostel Warden</span>;
+    }
+    if (user?.role === 'admin') {
       return <span className={`${styles.roleBadge} ${styles.adminBadge}`}>🛡️ Admin</span>;
     }
-    return <span className={`${styles.roleBadge} ${styles.userBadge}`}>👤 User</span>;
+    return <span className={`${styles.roleBadge} ${styles.userBadge}`}>👤 Faculty</span>;
   };
 
   const isActive = (href) => pathname === href || pathname?.startsWith(`${href}/`);
@@ -121,9 +142,9 @@ export default function Navbar({ user }) {
         )}
       </div>
       <div className={styles.sidebarFooter}>
-        <div>v1.0 · 2026</div>
+        <div>© 2026</div>
         <div style={{ fontSize: '9px', opacity: 0.75, marginTop: '4px', lineHeight: '1.4' }}>
-          developed by GOBINATH S and GAUTHAM S from MCA
+          Developed by GOBINATH S and GAUTHAM S from MCA
         </div>
       </div>
     </aside>

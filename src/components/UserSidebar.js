@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import styles from './Navbar.module.css';
@@ -9,17 +9,28 @@ export default function UserSidebar({ user }) {
   const pathname = usePathname();
   const handleLogout = useLogout();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(user?.role);
+  const isAdminRole = user?.role === 'admin' || user?.role === 'super-admin' || isWorkflowApprover;
 
   const navLinks = [];
   if (user) {
-    if (user.role === 'admin' || user.role === 'super-admin') {
+    if (isAdminRole) {
       navLinks.push({ href: '/admin', label: 'Admin Dashboard', icon: '📊' });
     }
-    navLinks.push({ href: '/', label: 'Home', icon: '🏠' });
-    if (user.permissions?.hallAccess !== false) navLinks.push({ href: '/halls', label: 'Halls', icon: '🏛️' });
-    if (user.permissions?.vehicleAccess !== false) navLinks.push({ href: '/vehicle-booking', label: 'Vehicles', icon: '🚗' });
-    if (user.permissions?.guestRoomAccess !== false) navLinks.push({ href: '/room-booking', label: 'Rooms', icon: '🏨' });
-    navLinks.push({ href: '/my-bookings', label: 'My Bookings', icon: '📋' });
+    // Only regular users/admins (not workflow approvers) get the booking page links
+    if (!isWorkflowApprover) {
+      navLinks.push({ href: '/', label: 'Home', icon: '🏠' });
+      if (user.permissions?.hallAccess !== false) navLinks.push({ href: '/halls', label: 'Halls', icon: '🏛️' });
+      if (user.permissions?.vehicleAccess !== false) navLinks.push({ href: '/vehicle-booking', label: 'Vehicles', icon: '🚗' });
+      if (user.permissions?.guestRoomAccess !== false) navLinks.push({ href: '/room-booking', label: 'Rooms', icon: '🏨' });
+      navLinks.push({ href: '/my-bookings', label: 'My Bookings', icon: '📋' });
+    }
   } else {
     navLinks.push(
       { href: '/halls', label: 'Halls', icon: '🏛️' },
@@ -27,6 +38,20 @@ export default function UserSidebar({ user }) {
       { href: '/room-booking', label: 'Rooms', icon: '🏨' },
     );
   }
+
+  const getRoleBadge = () => {
+    if (user?.role === 'super-admin') return '👑 Super Admin';
+    if (user?.role === 'hod') return `🎓 HOD (${user.department || ''})`;
+    if (user?.role === 'principal') return '🏫 Principal';
+    if (user?.role === 'ao') return '💼 AO';
+    if (user?.role === 'transport_manager') return '🚌 Transport Mgr';
+    if (user?.role === 'hostel_warden') return '🏨 Hostel Warden';
+    if (user?.role === 'admin') return '🛡️ Admin';
+    return '👤 Faculty';
+  };
+
+  const isSuperAdmin = user?.role === 'super-admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
 
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
 
@@ -58,7 +83,7 @@ export default function UserSidebar({ user }) {
       {/* Sidebar Container */}
       <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sidebarTop}>
-          <Link href="/" className={styles.logo} onClick={closeMenu}>
+          <Link href={mounted && isAdminRole ? '/admin' : '/'} className={styles.logo} onClick={closeMenu}>
             <img src="/images/kiotlogo.jpeg" alt="KIOT Logo" className={styles.logoImage} />
             <div className={styles.logoMeta}>
               <span className={styles.logoName}>KIOT</span>
@@ -66,24 +91,15 @@ export default function UserSidebar({ user }) {
             </div>
           </Link>
 
-          {user && (
-            user.role === 'admin' || user.role === 'super-admin' ? (
-              <Link href="/admin" className={styles.profileSection} style={{ cursor: 'pointer', textDecoration: 'none' }} onClick={closeMenu}>
-                <div className={styles.userText}>
-                  <span className={styles.userName}>{user.name}</span>
-                  <span className={`${styles.roleBadge} ${user.role === 'super-admin' ? styles.superAdminBadge : styles.adminBadge}`}>
-                    {user.role === 'super-admin' ? '👑 Super Admin' : '🛡️ Admin'}
-                  </span>
-                </div>
-              </Link>
-            ) : (
-              <div className={styles.profileSection}>
-                <div className={styles.userText}>
-                  <span className={styles.userName}>{user.name}</span>
-                  <span className={`${styles.roleBadge} ${styles.userBadge}`}>👤 User</span>
-                </div>
+          {user && mounted && (
+            <Link href={isAdminRole ? '/admin' : '/profile'} className={styles.profileSection} style={{ cursor: 'pointer', textDecoration: 'none' }} onClick={closeMenu}>
+              <div className={styles.userText}>
+                <span className={styles.userName}>{user.name}</span>
+                <span className={`${styles.roleBadge} ${isAdminRole ? styles.adminBadge : styles.userBadge}`}>
+                  {getRoleBadge()}
+                </span>
               </div>
-            )
+            </Link>
           )}
         </div>
 
@@ -121,9 +137,9 @@ export default function UserSidebar({ user }) {
           )}
         </div>
         <div className={styles.sidebarFooter}>
-          <div>v1.0 · 2026</div>
+          <div>© 2026</div>
           <div style={{ fontSize: '9px', opacity: 0.75, marginTop: '4px', lineHeight: '1.4' }}>
-            developed by GOBINATH S and GAUTHAM S from MCA
+            Developed by GOBINATH S and GAUTHAM S from MCA
           </div>
         </div>
       </aside>

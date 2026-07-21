@@ -14,10 +14,19 @@ const RoomBookingSchema = new mongoose.Schema({
   roomPurpose: String,
   specialRequests: String,
 
-  status: { type: String, enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_warden', 'approved', 'rejected', 'cancelled', 'completed'], default: 'pending_hod' },
   guestName: String,
   guestEmail: String,
   guestPhone: String,
+
+  // Stage approvals log auditing
+  approvals: [{
+    stage: String,
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    approvedAt: Date,
+    status: String,
+    comment: String
+  }],
 
   adminNote: String,
   actionBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

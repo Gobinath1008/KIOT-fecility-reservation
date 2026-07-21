@@ -63,8 +63,9 @@ export async function requireAuth(request) {
 export async function requireAdmin(request) {
   const { user, error } = await requireAuth(request);
   if (error) return { error };
-  if (user.role !== 'admin' && user.role !== 'super-admin') {
-    return { error: NextResponse.json({ message: 'Admin access required' }, { status: 403 }) };
+  const adminRoles = ['admin', 'super-admin', 'hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'];
+  if (!adminRoles.includes(user.role)) {
+    return { error: NextResponse.json({ message: 'Admin or Approver access required' }, { status: 403 }) };
   }
   return { user };
 }

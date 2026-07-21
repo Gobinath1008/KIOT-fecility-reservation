@@ -6,11 +6,11 @@ import RoomBooking from '@/models/RoomBooking';
 import { requireAuth, requireAdmin } from '@/lib/middleware';
 
 const findBookingById = async (id) => {
-  let booking = await HallBooking.findById(id).populate('user', 'name email phone');
+  let booking = await HallBooking.findById(id).populate('user', 'name email phone').populate('serviceId', 'name');
   if (booking) return booking;
-  booking = await VehicleBooking.findById(id).populate('user', 'name email phone');
+  booking = await VehicleBooking.findById(id).populate('user', 'name email phone').populate('serviceId', 'name registrationNumber capacity');
   if (booking) return booking;
-  booking = await RoomBooking.findById(id).populate('user', 'name email phone');
+  booking = await RoomBooking.findById(id).populate('user', 'name email phone').populate('serviceId', 'roomNumber floor');
   return booking;
 };
 
