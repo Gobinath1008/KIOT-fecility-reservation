@@ -63,6 +63,8 @@ export async function GET(request) {
       if (userId) {
         query.user = userId;
       }
+      // HODs should see bookings from their own department plus bookings made by themselves.
+      // If we don't apply filters, they pull everything, which is correct since they filter in frontend.
     }
   } else {
     // fetching all bookings (e.g., checking availability)

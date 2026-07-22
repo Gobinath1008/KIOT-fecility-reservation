@@ -209,6 +209,10 @@ function ManageBookingsContent() {
     if (user.role === 'super-admin' || user.role === 'admin') return true;
     
     if (b.status === 'pending_hod') {
+      // If the HOD themselves booked it, they are authorized to sign off on their own HOD-stage signature
+      const bookingUserId = b.user?._id || b.user;
+      if (bookingUserId === user.id || bookingUserId === user._id) return true;
+
       const bDept = b.department || b.user?.department || '';
       const userDept = user.department || '';
       return user.role === 'hod' && matchDepartment(userDept, bDept);
@@ -230,7 +234,7 @@ function ManageBookingsContent() {
 
   const didApproveOrReject = (b) => {
     if (!user) return false;
-    return (b.approvals || []).some(ap => ap.approvedBy?._id === user.id || ap.approvedBy === user.id);
+    return (b.approvals || []).some(ap => ap.approvedBy?._id === user.id || ap.approvedBy === user.id || ap.approvedBy?._id === user._id || ap.approvedBy === user._id);
   };
 
   const filtered = (activeTab === 'all' ? bookings : 
