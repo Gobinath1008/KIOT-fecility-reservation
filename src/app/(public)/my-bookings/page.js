@@ -48,6 +48,7 @@ export default function MyBookingsPage() {
   const [confirmModal, setConfirmModal] = useState(false);
   const [selectedForCancel, setSelectedForCancel] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
 
 
@@ -287,7 +288,7 @@ const formatDateTime = (value) => {
                               </div>
                             )}
                             <div style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '6px' }}>
-                              👤 <strong>{b.guestName || b.user?.name || 'Unknown'}{(b.user?.department || b.department) ? ` (${b.user?.department || b.department})` : ''}</strong>
+                            👤 <strong>{b.guestName || b.user?.name || 'Unknown'}{(b.user?.department || b.department) ? ` (${b.user?.department || b.department})` : ''}</strong>
                               {(b.guestPhone || b.user?.phone) ? ` • 📞 ${b.guestPhone || b.user?.phone}` : ''}
                             </div>
                             {b.adminNote && (
@@ -305,7 +306,10 @@ const formatDateTime = (value) => {
                         </div>
                         <div className={styles.bookingRight}>
                           <span className={`badge ${STATUS_COLORS[rtStatus]}`}>{rtStatus === 'live' ? 'In Progress' : rtStatus.charAt(0).toUpperCase() + rtStatus.slice(1)}</span>
-                          {['pending', 'approved'].includes(b.status) && (
+                          <button className="btn-secondary btn-sm" style={{ width: '100%' }} onClick={() => setSelectedBooking(b)}>
+                            👁️ Details
+                          </button>
+                          {['pending', 'approved', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(b.status) && (
                             <button className="btn-danger btn-sm" onClick={() => handleCancel(b._id)} disabled={cancelling === b._id}>
                               {cancelling === b._id ? '...' : '🗑️ Cancel'}
                             </button>
@@ -317,6 +321,165 @@ const formatDateTime = (value) => {
                 </div>
               )}
             </div>
+
+            {/* Requisition Details Modal */}
+            {selectedBooking && (
+              <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setSelectedBooking(null)}>
+                <div className="modal">
+                  <div className="modal-header">
+                    <h2 className="modal-title">Booking Requisition Details</h2>
+                    <button className="modal-close" onClick={() => setSelectedBooking(null)}>✕</button>
+                  </div>
+
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px' }}>
+                    {selectedBooking.serviceType === 'vehicle' ? (
+                      /* VEHICLE REQUEST FORM DIGITAL REPRODUCTION */
+                      <div style={{ fontFamily: 'monospace, sans-serif', color: '#1e293b' }}>
+                        <div style={{ textAlign: 'center', borderBottom: '2px double #475569', paddingBottom: '12px', marginBottom: '16px' }}>
+                          <h3 style={{ margin: '0', fontSize: '16px', fontWeight: 'bold', letterSpacing: '1px' }}>KNOWLEDGE INSTITUTE OF TECHNOLOGY</h3>
+                          <span style={{ fontSize: '12px' }}>SALEM - 637 504 | VEHICLE REQUEST FORM</span>
+                        </div>
+                        
+                        <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', marginBottom: '16px' }}>
+                          <tbody>
+                            <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>DEPT:</td><td>{selectedBooking.department || selectedBooking.user?.department || 'N/A'}</td></tr>
+                            <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>FACULTY NAME:</td><td>{selectedBooking.guestName || selectedBooking.user?.name}</td></tr>
+                            <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>CHIEF GUEST/PROGRAMME:</td><td>{selectedBooking.purpose || 'N/A'}</td></tr>
+                            <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>VEHICLE TYPE:</td><td>🚗 {selectedBooking.serviceId?.name || 'CAR / BUS / JEEP'}</td></tr>
+                            <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>ONWARD JOURNEY:</td><td>📅 {selectedBooking.vehiclePickupDate} at {formatTime12h(selectedBooking.vehiclePickupTime || '09:00')}</td></tr>
+                            <tr style={{ borderBottom: '1px dashed #cbd5e1' }}><td style={{ padding: '6px 0', fontWeight: 'bold' }}>RETURN JOURNEY:</td><td>📅 {selectedBooking.vehicleReturnDate} at {formatTime12h(selectedBooking.vehicleReturnTime || '17:00')}</td></tr>
+                            {selectedBooking.driverName && (
+                              <>
+                                <tr style={{ borderBottom: '1px dashed #cbd5e1', color: '#1e3a8a', fontWeight: 'bold' }}><td style={{ padding: '6px 0' }}>DRIVER NAME:</td><td>👨‍✈️ {selectedBooking.driverName}</td></tr>
+                                <tr style={{ borderBottom: '1px dashed #cbd5e1', color: '#1e3a8a', fontWeight: 'bold' }}><td style={{ padding: '6px 0' }}>DRIVER PHONE:</td><td>📞 {selectedBooking.driverPhone}</td></tr>
+                                <tr style={{ borderBottom: '1px dashed #cbd5e1', color: '#1e3a8a', fontWeight: 'bold' }}><td style={{ padding: '6px 0' }}>TOTAL KM:</td><td>📏 {selectedBooking.totalKm || 'N/A'}</td></tr>
+                              </>
+                            )}
+                          </tbody>
+                        </table>
+
+                        <div style={{ marginTop: '20px', borderTop: '1px solid #94a3b8', paddingTop: '12px' }}>
+                          <h5 style={{ margin: '0 0 10px 0', fontSize: '11px', textTransform: 'uppercase', color: '#64748b' }}>Workflow Approvals Checklist:</h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>HOD</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                            </div>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>PRINCIPAL</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'Principal') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                            </div>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>AO</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'Administrative Officer (AO)') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                            </div>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>TRANS. MGR</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.status === 'approved' ? '✓ ALLOCATED' : '⏳ PENDING'}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : selectedBooking.serviceType === 'room' ? (
+                      /* GUEST ACCOMMODATION REQUISITION FORM DIGITAL REPRODUCTION */
+                      <div style={{ fontFamily: 'Georgia, serif', color: '#1e293b' }}>
+                        <div style={{ textAlign: 'center', borderBottom: '2px solid #334155', paddingBottom: '8px', marginBottom: '16px' }}>
+                          <h3 style={{ margin: '0', fontSize: '18px', fontWeight: 'bold' }}>REQUISITION FOR GUEST ACCOMMODATION</h3>
+                          <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#64748b' }}>KIOT HOSTEL & ACCOMMODATION LOGS</span>
+                        </div>
+
+                        <div style={{ fontSize: '12px', lineHeight: '1.6', marginBottom: '16px' }}>
+                          <p style={{ margin: '4px 0' }}><strong>FROM:</strong> {selectedBooking.user?.name || selectedBooking.guestName}</p>
+                          <p style={{ margin: '4px 0' }}><strong>TO:</strong> The Principal, KIOT</p>
+                          <p style={{ margin: '8px 0', borderLeft: '3px solid #64748b', paddingLeft: '8px', fontStyle: 'italic' }}>
+                            <strong>Sub:</strong> Requisition for Guest Accommodation & Food Reg.
+                          </p>
+                          <p style={{ margin: '4px 0', textIndent: '20px' }}>
+                            We request you to provide food & accommodation in <strong>A-Block / Gents Hostel</strong> as mentioned below:
+                          </p>
+                        </div>
+
+                        <table style={{ width: '100%', fontSize: '11px', border: '1px solid #cbd5e1', borderCollapse: 'collapse', textAlign: 'center' }}>
+                          <thead>
+                            <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #cbd5e1' }}>
+                              <th style={{ padding: '6px', borderRight: '1px solid #cbd5e1' }}>Date range</th>
+                              <th style={{ padding: '6px', borderRight: '1px solid #cbd5e1' }}>Trainers count</th>
+                              <th style={{ padding: '6px', borderRight: '1px solid #cbd5e1' }}>Room type / Location</th>
+                              <th style={{ padding: '6px' }}>Requirements</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td style={{ padding: '8px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>{selectedBooking.roomCheckInDate} to {selectedBooking.roomCheckOutDate}</td>
+                              <td style={{ padding: '8px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>{selectedBooking.numberOfGuests || '1'} Male</td>
+                              <td style={{ padding: '8px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                                🏢 {selectedBooking.serviceId?.name || 'Gents Hostel AC Room'}
+                                {selectedBooking.serviceId?.roomNumber && (
+                                  <div style={{ fontSize: '10px', color: '#1e3a8a', fontWeight: 'bold', marginTop: '4px' }}>
+                                    Room {selectedBooking.serviceId.roomNumber} (Floor {selectedBooking.serviceId.floor || '0'})
+                                  </div>
+                                )}
+                              </td>
+                              <td style={{ padding: '8px', borderBottom: '1px solid #cbd5e1' }}>Accommodation & Food</td>
+                            </tr>
+                          </tbody>
+                        </table>
+
+                        <div style={{ marginTop: '20px', borderTop: '1px solid #94a3b8', paddingTop: '12px' }}>
+                          <h5 style={{ margin: '0 0 10px 0', fontSize: '11px', textTransform: 'uppercase', color: '#64748b' }}>Workflow Approvals Checklist:</h5>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>HOD</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                            </div>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>PRINCIPAL</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'Principal') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                            </div>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>AO</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'Administrative Officer (AO)') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                            </div>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>WARDEN</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.status === 'approved' ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      /* STANDARD SEMINAR HALL BOOKING SUMMARY VIEW */
+                      <div style={{ color: '#1e293b' }}>
+                        <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 'bold', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>🏛️ Seminar Hall Booking Requisition</h3>
+                        <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                          <tbody>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold', width: '140px' }}>Seminar Hall:</td><td>{selectedBooking.serviceId?.name || 'N/A'}</td></tr>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Faculty Name:</td><td>{selectedBooking.user?.name || 'N/A'}</td></tr>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Department:</td><td>{selectedBooking.department || selectedBooking.user?.department || 'N/A'}</td></tr>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Event Date:</td><td>{selectedBooking.hallDate || 'N/A'}</td></tr>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Event Time:</td><td>{formatTime12h(selectedBooking.hallStartTime)} – {formatTime12h(selectedBooking.hallEndTime)}</td></tr>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Purpose:</td><td>{selectedBooking.purpose || 'N/A'}</td></tr>
+                            <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Expected Attendees:</td><td>{selectedBooking.attendees || 'N/A'}</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    {selectedBooking.approvals && selectedBooking.approvals.length > 0 && (
+                      <div style={{ marginTop: 20, borderTop: '1px dashed #cbd5e1', paddingTop: 12 }}>
+                        <span style={{ fontSize: 13, fontWeight: 'bold', display: 'block', marginBottom: 8, color: '#334155' }}>Approval Trail Details:</span>
+                        {selectedBooking.approvals.map((ap, idx) => (
+                          <div key={idx} style={{ fontSize: 12, color: '#475569', marginBottom: 6 }}>
+                            ⏳ Stage <strong>{ap.stage}</strong>: {ap.status === 'approved' ? '✅ Approved' : '❌ Rejected'} {ap.approvedBy ? `by ${ap.approvedBy.name || 'Approver'}${ap.stage === 'HOD' && ap.approvedBy.department ? ` (${ap.approvedBy.department})` : ''}` : ''}
+                            {ap.comment && <div style={{ fontSize: 11, fontStyle: 'italic', marginLeft: 14, color: '#64748b' }}>"{ap.comment}"</div>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Cancellation Confirmation Modal */}
             {confirmModal && selectedForCancel && (
