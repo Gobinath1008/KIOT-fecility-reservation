@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import homeStyles from '@/app/(public)/home.module.css';
 import styles from './mybookings.module.css';
 import adminStyles from '../../(admin)/admin/bookings/bookings.module.css';
-import { openBookingPrintWindow } from '../../../lib/bookingPrint';
+import { openBookingPrintWindow, printSingleBooking } from '../../../lib/bookingPrint';
 
 const TABS = ['all', 'pending', 'approved', 'rejected', 'cancelled'];
 const STATUS_COLORS = { pending: 'badge-pending', approved: 'badge-approved', rejected: 'badge-rejected', cancelled: 'badge-cancelled', completed: 'badge-completed', live: 'badge-live', finished: 'badge-finished' };
@@ -334,9 +334,14 @@ const formatDateTime = (value) => {
             {selectedBooking && (
               <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setSelectedBooking(null)}>
                 <div className="modal">
-                  <div className="modal-header">
+                  <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2 className="modal-title">Booking Requisition Details</h2>
-                    <button className="modal-close" onClick={() => setSelectedBooking(null)}>✕</button>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => printSingleBooking(selectedBooking)}>
+                        🖨️ Print Requisition
+                      </button>
+                      <button className="modal-close" onClick={() => setSelectedBooking(null)} style={{ position: 'static' }}>✕</button>
+                    </div>
                   </div>
 
                   <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px' }}>

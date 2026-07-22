@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import styles from './bookings.module.css';
-import { openBookingPrintWindow } from '../../../../lib/bookingPrint';
+import { openBookingPrintWindow, printSingleBooking } from '../../../../lib/bookingPrint';
 import { matchDepartment } from '../../../../lib/deptMatcher';
 
 const STATUS_TABS = ['all', 'pending', 'approved', 'rejected', 'cancelled'];
@@ -419,9 +419,14 @@ function ManageBookingsContent() {
       {modal && selected && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && closeModal()}>
           <div className="modal">
-            <div className="modal-header">
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 className="modal-title">Review Booking</h2>
-              <button className="modal-close" onClick={closeModal}>✕</button>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button className="btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => printSingleBooking(selected)}>
+                  🖨️ Print Requisition
+                </button>
+                <button className="modal-close" onClick={closeModal} style={{ position: 'static' }}>✕</button>
+              </div>
             </div>
             
             <div className={styles.summaryBox} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '24px' }}>

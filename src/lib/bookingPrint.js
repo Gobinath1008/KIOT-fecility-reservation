@@ -241,3 +241,202 @@ export const openBookingPrintWindow = async (bookings, options = {}) => {
 
   return true;
 };
+
+export const printSingleBooking = (booking) => {
+  const printWindow = window.open('', '', 'height=600,width=800');
+  if (!printWindow) return false;
+
+  const escape = (val) => String(val ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  
+  let contentHtml = '';
+  const approvalsList = (booking.approvals || []).map(ap => `
+    <div style="font-size: 11px; margin-bottom: 4px; color: #334155;">
+      ⏳ Stage <strong>${escape(ap.stage)}</strong>: ${ap.status === 'approved' ? '✅ Approved' : '❌ Rejected'} ${ap.approvedBy?.name ? `by ${escape(ap.approvedBy.name)}` : ''}
+      ${ap.comment ? `<div style="font-style: italic; font-size: 10px; margin-left: 15px; color: #475569;">"${escape(ap.comment)}"</div>` : ''}
+    </div>
+  `).join('');
+
+  if (booking.serviceType === 'vehicle') {
+    contentHtml = `
+      <div style="font-family: 'Courier New', Courier, monospace, sans-serif; color: #111; max-width: 650px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+        <div style="text-align: center; border-bottom: 2px double #000; padding-bottom: 12px; marginBottom: 16px;">
+          <h2 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 1px;">KNOWLEDGE INSTITUTE OF TECHNOLOGY</h2>
+          <span style="font-size: 12px;">SALEM - 637 504 | VEHICLE REQUEST FORM</span>
+        </div>
+        
+        <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px;">
+          <tbody>
+            <tr style="border-bottom: 1px dashed #aaa;"><td style="padding: 8px 0; font-weight: bold; width: 200px;">DEPT:</td><td>${escape(booking.department || booking.user?.department || 'N/A')}</td></tr>
+            <tr style="border-bottom: 1px dashed #aaa;"><td style="padding: 8px 0; font-weight: bold;">FACULTY NAME:</td><td>${escape(booking.guestName || booking.user?.name || 'N/A')}</td></tr>
+            <tr style="border-bottom: 1px dashed #aaa;"><td style="padding: 8px 0; font-weight: bold;">CHIEF GUEST/PROGRAMME:</td><td>${escape(booking.purpose || 'N/A')}</td></tr>
+            <tr style="border-bottom: 1px dashed #aaa;"><td style="padding: 8px 0; font-weight: bold;">VEHICLE TYPE:</td><td>🚗 ${escape(booking.serviceId?.name || 'CAR / BUS / JEEP')}</td></tr>
+            <tr style="border-bottom: 1px dashed #aaa;"><td style="padding: 8px 0; font-weight: bold;">ONWARD JOURNEY:</td><td>📅 ${escape(booking.vehiclePickupDate)} at ${formatTime12h(booking.vehiclePickupTime || '09:00')}</td></tr>
+            <tr style="border-bottom: 1px dashed #aaa;"><td style="padding: 8px 0; font-weight: bold;">RETURN JOURNEY:</td><td>📅 ${escape(booking.vehicleReturnDate)} at ${formatTime12h(booking.vehicleReturnTime || '17:00')}</td></tr>
+            ${booking.driverName ? `
+              <tr style="border-bottom: 1px dashed #aaa; color: #1e3a8a; font-weight: bold;"><td style="padding: 8px 0;">DRIVER NAME:</td><td>👨‍✈️ ${escape(booking.driverName)}</td></tr>
+              <tr style="border-bottom: 1px dashed #aaa; color: #1e3a8a; font-weight: bold;"><td style="padding: 8px 0;">DRIVER PHONE:</td><td>📞 ${escape(booking.driverPhone)}</td></tr>
+              <tr style="border-bottom: 1px dashed #aaa; color: #1e3a8a; font-weight: bold;"><td style="padding: 8px 0;">TOTAL KM:</td><td>📏 ${escape(booking.totalKm || 'N/A')}</td></tr>
+            ` : ''}
+          </tbody>
+        </table>
+
+        <div style="margin-top: 25px; border-top: 1px solid #000; padding-top: 12px;">
+          <h5 style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #555; font-weight: bold;">Workflow Approvals Checklist:</h5>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; font-size: 11px; text-align: center;">
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>HOD</div>
+              <strong style="color: #10b981;">${booking.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+            </div>
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>ADMIN</div>
+              <strong style="color: #10b981;">${booking.approvals?.some(a => a.stage === 'Admin') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+            </div>
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>PRINCIPAL</div>
+              <strong style={{ color: '#10b981' }}>${booking.approvals?.some(a => a.stage === 'Principal') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+            </div>
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>AO</div>
+              <strong style="color: #10b981;">${booking.approvals?.some(a => a.stage === 'Administrative Officer (AO)') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+            </div>
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>TRANS. MGR</div>
+              <strong style="color: #10b981;">${booking.status === 'approved' ? '✓ ALLOCATED' : '⏳ PENDING'}</strong>
+            </div>
+          </div>
+        </div>
+        ${approvalsList ? `
+          <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
+            <div style="font-weight: bold; margin-bottom: 8px; font-size: 12px;">Approval Trail Details:</div>
+            ${approvalsList}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else if (booking.serviceType === 'room') {
+    contentHtml = `
+      <div style="font-family: Georgia, serif; color: #111; max-width: 650px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 16px;">
+          <h2 style="margin: 0; font-size: 18px; font-weight: bold;">REQUISITION FOR GUEST ACCOMMODATION</h2>
+          <span style="font-size: 11px; font-family: monospace; color: #555;">KIOT HOSTEL & ACCOMMODATION LOGS</span>
+        </div>
+
+        <div style="font-size: 13px; line-height: 1.6; margin-bottom: 16px;">
+          <p style="margin: 4px 0;"><strong>FROM:</strong> ${escape(booking.user?.name || booking.guestName)}</p>
+          <p style="margin: 4px 0;"><strong>TO:</strong> The Principal, KIOT</p>
+          <p style="margin: 8px 0; border-left: 3px solid #555; padding-left: 8px; font-style: italic;">
+            <strong>Sub:</strong> Requisition for Guest Accommodation & Food Reg.
+          </p>
+          <p style="margin: 4px 0; text-indent: 20px;">
+            We request you to provide food & accommodation in <strong>A-Block / Gents Hostel</strong> as mentioned below:
+          </p>
+        </div>
+
+        <table style="width: 100%; font-size: 12px; border: 1px solid #ccc; border-collapse: collapse; text-align: center; margin-bottom: 20px;">
+          <thead>
+            <tr style="background: #f1f5f9; border-bottom: 1px solid #ccc;">
+              <th style="padding: 8px; border-right: 1px solid #ccc;">Date range</th>
+              <th style="padding: 8px; border-right: 1px solid #ccc;">Trainers count</th>
+              <th style="padding: 8px; border-right: 1px solid #ccc;">Room type / Location</th>
+              <th style="padding: 8px;">Requirements</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 8px; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc;">${escape(booking.roomCheckInDate)} to ${escape(booking.roomCheckOutDate)}</td>
+              <td style="padding: 8px; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc;">${escape(booking.numberOfGuests || '1')} Male</td>
+              <td style="padding: 8px; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc;">
+                🏢 ${escape(booking.serviceId?.name || 'Gents Hostel AC Room')}
+                ${booking.serviceId?.roomNumber ? `<div>Room ${escape(booking.serviceId.roomNumber)} (Floor ${escape(booking.serviceId.floor || '0')})</div>` : ''}
+              </td>
+              <td style="padding: 8px; border-bottom: 1px solid #ccc;">Accommodation & Food</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="margin-top: 25px; border-top: 1px solid #000; padding-top: 12px;">
+          <h5 style="margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #555; font-weight: bold;">Workflow Approvals Checklist:</h5>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; font-size: 11px; text-align: center;">
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>HOD</div>
+              <strong style="color: #10b981;">${booking.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+            </div>
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>ADMIN</div>
+              <strong style="color: #10b981;">${booking.approvals?.some(a => a.stage === 'Admin') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+            </div>
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>PRINCIPAL</div>
+              <strong style="color: #10b981;">${booking.approvals?.some(a => a.stage === 'Principal') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+            </div>
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>AO</div>
+              <strong style="color: #10b981;">${booking.approvals?.some(a => a.stage === 'Administrative Officer (AO)') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+            </div>
+            <div style="padding: 8px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px;">
+              <div>WARDEN</div>
+              <strong style="color: #10b981;">${booking.status === 'approved' ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+            </div>
+          </div>
+        </div>
+        ${approvalsList ? `
+          <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
+            <div style="font-weight: bold; margin-bottom: 8px; font-size: 12px;">Approval Trail Details:</div>
+            ${approvalsList}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  } else {
+    contentHtml = `
+      <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+        <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 8px; color: #1e3a8a;">🏛️ Seminar Hall Booking Requisition</h3>
+        <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px;">
+          <tbody>
+            <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold; width: 150px;">Seminar Hall:</td><td>${escape(booking.serviceId?.name || 'N/A')}</td></tr>
+            <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Faculty Name:</td><td>${escape(booking.user?.name || 'N/A')}</td></tr>
+            <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Department:</td><td>${escape(booking.department || booking.user?.department || 'N/A')}</td></tr>
+            <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Event Date:</td><td>${escape(booking.hallDate || booking.date || 'N/A')}</td></tr>
+            <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Event Time:</td><td>${formatTime12h(booking.hallStartTime)} – ${formatTime12h(booking.hallEndTime)}</td></tr>
+            <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Purpose:</td><td>${escape(booking.purpose || 'N/A')}</td></tr>
+            <tr><td style="padding: 8px 0; font-weight: bold;">Expected Attendees:</td><td>${escape(booking.attendees || 'N/A')}</td></tr>
+          </tbody>
+        </table>
+        ${approvalsList ? `
+          <div style="margin-top: 20px; border-top: 1px dashed #ccc; padding-top: 15px;">
+            <div style="font-weight: bold; margin-bottom: 8px; font-size: 12px;">Approval Trail Details:</div>
+            ${approvalsList}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  const printHtml = `
+    <html>
+      <head>
+        <title>Print Requisition Form</title>
+        <style>
+          body { padding: 20px; margin: 0; }
+          @media print {
+            body { padding: 0; }
+            button { display: none !important; }
+          }
+        </style>
+      </head>
+      <body>
+        ${contentHtml}
+        <script>
+          window.onload = function() {
+            window.focus();
+            window.print();
+          }
+        </script>
+      </body>
+    </html>
+  `;
+
+  printWindow.document.write(printHtml);
+  printWindow.document.close();
+  return true;
+};
