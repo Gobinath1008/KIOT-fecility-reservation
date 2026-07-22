@@ -21,7 +21,7 @@ export default function UserSidebar({ user }) {
   const navLinks = [];
   if (user) {
     if (isAdminRole) {
-      navLinks.push({ href: '/admin', label: 'Admin Dashboard', icon: '📊' });
+      navLinks.push({ href: '/admin', label: user.role === 'hod' ? 'HOD Dashboard' : 'Admin Dashboard', icon: '📊' });
     }
     // Regular users, admins, and HODs get the booking page links
     if (!isWorkflowApprover || user.role === 'hod') {

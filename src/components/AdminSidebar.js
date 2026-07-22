@@ -37,7 +37,7 @@ export default function AdminSidebar({ user }) {
       <div className={styles.mobileHeader}>
         <Link href="/admin" className={styles.mobileLogo} onClick={closeMenu}>
           <img src="/images/kiotlogo.jpeg" alt="KIOT Logo" className={styles.mobileLogoImage} />
-          <span className={styles.mobileLogoText}>KIOT Admin</span>
+          <span className={styles.mobileLogoText}>{user?.role === 'hod' ? 'KIOT HOD' : 'KIOT Admin'}</span>
         </Link>
         <button 
           onClick={toggleMenu} 
@@ -60,8 +60,8 @@ export default function AdminSidebar({ user }) {
             <Link href="/admin" className={styles.logo} onClick={closeMenu}>
               <img src="/images/kiotlogo.jpeg" alt="KIOT Logo" className={styles.logoImage} />
               <div className={styles.logoMeta}>
-                <span className={styles.logoName}>KIOT Admin</span>
-                <span className={styles.logoSub}>Booking Control</span>
+                <span className={styles.logoName}>{user?.role === 'hod' ? 'KIOT HOD' : 'KIOT Admin'}</span>
+                <span className={styles.logoSub}>{user?.role === 'hod' ? 'HOD Control' : 'Booking Control'}</span>
               </div>
             </Link>
           </div>
