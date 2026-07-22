@@ -281,6 +281,8 @@ export async function POST(request) {
     }
   }
 
+  const isAdminBooking = currentUser.role === 'admin' || currentUser.role === 'super-admin';
+
   let createdBooking;
   if (serviceType === 'hall') {
     createdBooking = await HallBooking.create({
@@ -316,7 +318,7 @@ export async function POST(request) {
       guestEmail: guestEmail || currentUser.email,
       guestPhone: guestPhone || currentUser.phone,
       department: currentUser.department || '',
-      status: 'pending_hod',
+      status: isAdminBooking ? 'pending_principal' : 'pending_hod',
       approvals: []
     });
   } else if (serviceType === 'room') {
@@ -334,7 +336,7 @@ export async function POST(request) {
       guestEmail: guestEmail || currentUser.email,
       guestPhone: guestPhone || currentUser.phone,
       department: currentUser.department || '',
-      status: 'pending_hod',
+      status: isAdminBooking ? 'pending_principal' : 'pending_hod',
       approvals: []
     });
   }
@@ -344,23 +346,40 @@ export async function POST(request) {
   // Trigger initial email for Vehicles/Rooms
   if (serviceType === 'vehicle' || serviceType === 'room') {
     try {
-      const HODs = await User.find({ role: 'hod' });
-      const deptHOD = HODs.find(hod => matchDepartment(hod.department, currentUser.department));
-      if (deptHOD && deptHOD.email) {
-        const origin = request.headers.get('origin') || 'http://localhost:3000';
-        await sendApprovalRequestEmail({
-          toEmail: deptHOD.email,
-          toName: deptHOD.name,
-          bookingType: serviceType,
-          bookingId: populated._id.toString(),
-          applicantName: populated.guestName || populated.user?.name,
-          applicantDept: populated.department || populated.user?.department || '',
-          stageName: 'HOD',
-          detailsLink: `${origin}/admin/bookings`
-        });
+      const origin = request.headers.get('origin') || 'http://localhost:3000';
+      if (isAdminBooking) {
+        // Skip HOD, route straight to Principal
+        const principal = await User.findOne({ role: 'principal' });
+        if (principal && principal.email) {
+          await sendApprovalRequestEmail({
+            toEmail: principal.email,
+            toName: principal.name,
+            bookingType: serviceType,
+            bookingId: populated._id.toString(),
+            applicantName: populated.guestName || populated.user?.name,
+            applicantDept: populated.department || populated.user?.department || '',
+            stageName: 'Principal',
+            detailsLink: `${origin}/admin/bookings`
+          });
+        }
+      } else {
+        const HODs = await User.find({ role: 'hod' });
+        const deptHOD = HODs.find(hod => matchDepartment(hod.department, currentUser.department));
+        if (deptHOD && deptHOD.email) {
+          await sendApprovalRequestEmail({
+            toEmail: deptHOD.email,
+            toName: deptHOD.name,
+            bookingType: serviceType,
+            bookingId: populated._id.toString(),
+            applicantName: populated.guestName || populated.user?.name,
+            applicantDept: populated.department || populated.user?.department || '',
+            stageName: 'HOD',
+            detailsLink: `${origin}/admin/bookings`
+          });
+        }
       }
     } catch (err) {
-      console.error('[WORKFLOW] Failed to send initial HOD email:', err);
+      console.error('[WORKFLOW] Failed to send initial workflow email:', err);
     }
   }
 

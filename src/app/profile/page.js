@@ -237,6 +237,24 @@ export default function ProfilePage() {
                 />
               </label>
 
+              {profile?.role === 'hod' && (
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#334155', fontSize: 13, fontWeight: 700 }}>
+                  Department
+                  <select
+                    name="department"
+                    value={form.department}
+                    onChange={handleChange}
+                    required
+                    style={{ border: '1px solid #cbd5e1', borderRadius: 12, padding: '12px 13px', fontSize: 14, color: '#0f172a', outline: 'none', background: '#fff' }}
+                  >
+                    <option value="">Select Department</option>
+                    {[...ugDepartments, ...pgDepartments].map(dept => (
+                      <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
               {!['super-admin', 'admin', 'hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(profile?.role) && (
                 <>
                   <label style={{ display: 'flex', flexDirection: 'column', gap: 8, color: '#334155', fontSize: 13, fontWeight: 700 }}>
