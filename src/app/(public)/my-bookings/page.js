@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import homeStyles from '@/app/(public)/home.module.css';
 import styles from './mybookings.module.css';
+import adminStyles from '../../(admin)/admin/bookings/bookings.module.css';
 import { openBookingPrintWindow } from '../../../lib/bookingPrint';
 
 const TABS = ['all', 'pending', 'approved', 'rejected', 'cancelled'];
@@ -250,72 +251,79 @@ const formatDateTime = (value) => {
                   </div>
                 </div>
               ) : (
-                <div className={styles.bookingList}>
-                  {filtered.map((b, idx) => {
-                    const details = getBookingDetails(b);
+                <div className={adminStyles.list}>
+                  {filtered.map((b) => {
+                    const bookingPurpose = b.purpose || b.roomPurpose || b.specialRequests;
                     const rtStatus = getRealTimeStatus(b);
                     return (
-                      <motion.div
-                        key={b._id}
-                        className={styles.bookingCard}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                      >
-                        <div className={styles.bookingLeft}>
-                          <div className={styles.statusIcon}>{STATUS_ICONS[rtStatus]}</div>
-                          <div className={styles.bookingInfo}>
-                            <div className={styles.bookingHall}>
-                              {b.serviceType === 'vehicle' ?
-                                `🚗 ${b.serviceId?.name || 'Vehicle'} (${b.serviceId?.registrationNumber || 'N/A'})` :
-                               b.serviceType === 'room' ?
-                                `🏨 Room ${b.serviceId?.roomNumber || 'N/A'}` :
-                               `🏛️ ${b.serviceId?.name || 'Event Hall'}`}
-                            </div>
-                            <div className={styles.bookingMeta}>
-                              📅 {details.date}
-                            </div>
-                            <div className={styles.bookingMeta}>
-                              {details.time}
-                            </div>
-                            <div className={styles.bookingPurpose} style={{ fontWeight: 500, color: '#374151', marginTop: '4px' }}>
-                              {details.location}
-                            </div>
-                            <div className={styles.bookingPurpose}>{details.description}</div>
-                            {b.serviceType === 'vehicle' && b.status === 'approved' && b.driverName && (
-                              <div style={{ marginTop: 8, padding: '8px 12px', fontSize: '0.85rem', background: '#eff6ff', borderLeft: '3px solid #3b82f6', borderRadius: 4, color: '#1e3a8a' }}>
-                                👨‍✈️ Driver: <strong>{b.driverName}</strong> ({b.driverPhone}) | Vehicle: <strong>{b.assignedVehicleNumber}</strong>
+                      <div key={b._id} className={adminStyles.card} onClick={() => setSelectedBooking(b)} style={{ cursor: 'pointer' }}>
+                        <div className={adminStyles.cardTop}>
+                          <div className={adminStyles.userInfo}>
+                            <div className={adminStyles.avatar}>{b.user?.name?.[0]?.toUpperCase() || b.guestName?.[0]?.toUpperCase() || 'U'}</div>
+                            <div>
+                              <div className={adminStyles.userName}>{b.guestName || b.user?.name || 'Unknown'}{(b.user?.department || b.department) ? ` (${b.user?.department || b.department})` : ''}</div>
+                              <div className={adminStyles.userMeta}>
+                                {b.user?.department || b.department || b.user?.role || 'Faculty'}
                               </div>
-                            )}
-                            <div style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '6px' }}>
-                            👤 <strong>{b.guestName || b.user?.name || 'Unknown'}{(b.user?.department || b.department) ? ` (${b.user?.department || b.department})` : ''}</strong>
-                              {(b.guestPhone || b.user?.phone) ? ` • 📞 ${b.guestPhone || b.user?.phone}` : ''}
                             </div>
-                            {b.adminNote && (
-                              <div className={styles.adminNote}>💬 Admin: {b.adminNote}</div>
-                            )}
-                            {b.actionBy && b.status !== 'pending' && (
-                              <div className={styles.adminNote}>⚙️ {b.status === 'approved' ? 'Approved' : b.status === 'rejected' ? 'Rejected' : 'Reviewed'} at {formatDateTime(b.actionAt)}</div>
-                            )}
-                            {b.cancellationReason && (
-                              <div className={styles.cancellationNote}>
-                                🚫 {b.cancelledBy === 'admin' ? 'Admin ' : 'User '}cancelled: {b.cancellationReason}{b.cancelledAt ? ` — ${formatDateTime(b.cancelledAt)}` : ''}
-                              </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span className={`badge ${STATUS_COLORS[rtStatus]}`}>
+                              {rtStatus === 'live' ? 'In Progress' : 
+                               ['pending', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(b.status) ? `Pending (${b.status.replace('pending_', '').toUpperCase()})` : 
+                               rtStatus.charAt(0).toUpperCase() + rtStatus.slice(1)}
+                            </span>
+                            {['pending', 'approved', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(b.status) && (
+                              <button className="btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); handleCancel(b._id); }} disabled={cancelling === b._id} title="Cancel this booking">
+                                🗑️
+                              </button>
                             )}
                           </div>
                         </div>
-                        <div className={styles.bookingRight}>
-                          <span className={`badge ${STATUS_COLORS[rtStatus]}`}>{rtStatus === 'live' ? 'In Progress' : rtStatus.charAt(0).toUpperCase() + rtStatus.slice(1)}</span>
-                          <button className="btn-secondary btn-sm" style={{ width: '100%' }} onClick={() => setSelectedBooking(b)}>
-                            👁️ Details
-                          </button>
-                          {['pending', 'approved', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(b.status) && (
-                            <button className="btn-danger btn-sm" onClick={() => handleCancel(b._id)} disabled={cancelling === b._id}>
-                              {cancelling === b._id ? '...' : '🗑️ Cancel'}
-                            </button>
+                        <div className={adminStyles.cardBody}>
+                          <div className={adminStyles.hallName}>
+                            {b.serviceType === 'vehicle' ? 
+                              `🚗 ${b.serviceId?.name || 'Vehicle'} (${b.serviceId?.registrationNumber || 'N/A'})` :
+                             b.serviceType === 'room' ? 
+                              `🏨 Room ${b.serviceId?.roomNumber || 'N/A'} (Floor ${b.serviceId?.floor || '0'})` :
+                             `🏛️ ${b.serviceId?.name || 'Event Hall'}`}
+                          </div>
+                          <div className={adminStyles.bookingMeta}>
+                            {b.serviceType === 'room' ? (
+                              <>
+                                Check-in: {b.roomCheckInDate} at {formatTime12h(b.roomCheckInTime || '14:00')}<br />
+                                Check-out: {b.roomCheckOutDate} at {formatTime12h(b.roomCheckOutTime || '12:00')}
+                              </>
+                            ) : (
+                              <>
+                                📅 {b.date || b.hallDate || b.vehiclePickupDate || b.roomCheckInDate} 
+                                &nbsp;•&nbsp; 🕐 {formatTime12h(b.startTime || b.hallStartTime || b.vehiclePickupTime || b.roomCheckInTime) || 'N/A'} – {formatTime12h(b.endTime || b.hallEndTime || b.vehicleReturnTime || b.roomCheckOutTime) || 'N/A'}
+                              </>
+                            )}
+                          </div>
+                          {b.serviceType === 'vehicle' && b.driverName && (
+                            <div style={{ marginTop: 8, padding: '6px 10px', fontSize: 13, background: 'rgba(59,130,246,0.06)', borderRadius: 4, borderLeft: '3px solid #3b82f6' }}>
+                              👨‍✈️ Driver: <strong>{b.driverName}</strong> ({b.driverPhone}) | 🚗 Vehicle No: <strong>{b.assignedVehicleNumber}</strong>
+                            </div>
+                          )}
+                          <div className={adminStyles.purpose}>📋 {bookingPurpose ? `Purpose: ${bookingPurpose}` : 'No purpose provided'}</div>
+                          {b.actionBy && b.status !== 'pending' && !['pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(b.status) && (
+                            <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-secondary)' }}>
+                              {b.status === 'approved' ? '✅ Approved by: ' : b.status === 'rejected' ? '❌ Rejected by: ' : '🗑️ Cancelled by: '} 
+                              <strong>{b.actionBy?.name || 'Admin'}</strong>
+                              {b.actionAt && (
+                                <span style={{ marginLeft: 8, fontSize: 12, color: 'var(--text-muted)' }}> — {formatDateTime(b.actionAt)}</span>
+                              )}
+                            </div>
+                          )}
+                          {b.cancellationReason && (
+                            <div style={{ marginTop: 8, padding: 8, fontSize: 13, color: 'var(--text-secondary)', background: 'rgba(255,59,48,0.08)', borderRadius: 'var(--radius-sm)' }}>
+                              🚫 {b.cancelledBy === 'admin' ? 'Admin' : 'User'} cancelled: {b.cancellationReason}
+                            </div>
                           )}
                         </div>
-                      </motion.div>
+                        <div className={adminStyles.actionHint}>View details →</div>
+                      </div>
                     );
                   })}
                 </div>
