@@ -78,11 +78,6 @@ export async function POST(request, props) {
     stageName = 'Hostel Warden';
   }
 
-  // Super-admin and normal Admin bypass authorization check
-  if (isSuperAdminOrAdmin) {
-    hasAuthority = true;
-  }
-
   if (!hasAuthority) {
     return NextResponse.json({ message: `You are not authorized to approve/reject at the current stage: ${currentStatus}` }, { status: 403 });
   }

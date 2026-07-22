@@ -206,7 +206,6 @@ function ManageBookingsContent() {
 
   const canApproveBooking = (b) => {
     if (!user) return false;
-    if (user.role === 'super-admin' || user.role === 'admin') return true;
     
     if (b.status === 'pending_hod') {
       // If the HOD themselves booked it, they are authorized to sign off on their own HOD-stage signature
