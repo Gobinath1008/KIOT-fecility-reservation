@@ -41,7 +41,10 @@ export default function Navbar({ user }) {
         );
       }
       navLinks.push({ href: '/admin/bookings', label: 'Bookings', icon: '📋' });
-    } else {
+    }
+    
+    // If user is not admin, or is HOD (we want HOD to have normal user links too)
+    if (user.role !== 'admin' && user.role !== 'super-admin') {
       navLinks.push({ href: '/', label: 'Home', icon: '🏠' });
       if (user.permissions?.hallAccess !== false) navLinks.push({ href: '/halls', label: 'Halls', icon: '🏛️' });
       if (user.permissions?.vehicleAccess !== false) navLinks.push({ href: '/vehicle-booking', label: 'Vehicles', icon: '🚗' });

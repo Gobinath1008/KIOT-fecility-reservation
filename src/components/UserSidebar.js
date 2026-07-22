@@ -23,8 +23,8 @@ export default function UserSidebar({ user }) {
     if (isAdminRole) {
       navLinks.push({ href: '/admin', label: 'Admin Dashboard', icon: '📊' });
     }
-    // Only regular users/admins (not workflow approvers) get the booking page links
-    if (!isWorkflowApprover) {
+    // Regular users, admins, and HODs get the booking page links
+    if (!isWorkflowApprover || user.role === 'hod') {
       navLinks.push({ href: '/', label: 'Home', icon: '🏠' });
       if (user.permissions?.hallAccess !== false) navLinks.push({ href: '/halls', label: 'Halls', icon: '🏛️' });
       if (user.permissions?.vehicleAccess !== false) navLinks.push({ href: '/vehicle-booking', label: 'Vehicles', icon: '🚗' });
