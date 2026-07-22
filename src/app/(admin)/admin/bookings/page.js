@@ -200,7 +200,7 @@ function ManageBookingsContent() {
   if (showVehicle) allowedServiceTypes.push('vehicle');
   if (showRoom) allowedServiceTypes.push('room');
 
-  const isPending = (status) => ['pending', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(status);
+  const isPending = (status) => ['pending', 'pending_hod', 'pending_admin', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(status);
 
   const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(user?.role);
 
@@ -216,6 +216,9 @@ function ManageBookingsContent() {
       const bDept = b.department || b.user?.department || '';
       const userDept = user.department || '';
       return user.role === 'hod' && matchDepartment(userDept, bDept);
+    }
+    if (b.status === 'pending_admin') {
+      return user.role === 'admin' || user.role === 'super-admin';
     }
     if (b.status === 'pending_principal') {
       return user.role === 'principal';
@@ -452,10 +455,14 @@ function ManageBookingsContent() {
 
                   <div style={{ marginTop: '20px', borderTop: '1px solid #94a3b8', paddingTop: '12px' }}>
                     <h5 style={{ margin: '0 0 10px 0', fontSize: '11px', textTransform: 'uppercase', color: '#64748b' }}>Workflow Approvals Checklist:</h5>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
                       <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
                         <div>HOD</div>
                         <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                      </div>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>ADMIN</div>
+                        <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'Admin') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
                       </div>
                       <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
                         <div>PRINCIPAL</div>
@@ -519,10 +526,14 @@ function ManageBookingsContent() {
 
                   <div style={{ marginTop: '20px', borderTop: '1px solid #94a3b8', paddingTop: '12px' }}>
                     <h5 style={{ margin: '0 0 10px 0', fontSize: '11px', textTransform: 'uppercase', color: '#64748b' }}>Workflow Approvals Checklist:</h5>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
                       <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
                         <div>HOD</div>
                         <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                      </div>
+                      <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                        <div>ADMIN</div>
+                        <strong style={{ color: '#10b981' }}>{selected.approvals?.some(a => a.stage === 'Admin') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
                       </div>
                       <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
                         <div>PRINCIPAL</div>

@@ -270,10 +270,10 @@ const formatDateTime = (value) => {
                           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                             <span className={`badge ${STATUS_COLORS[rtStatus]}`}>
                               {rtStatus === 'live' ? 'In Progress' : 
-                               ['pending', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(b.status) ? `Pending (${b.status.replace('pending_', '').toUpperCase()})` : 
+                               ['pending', 'pending_hod', 'pending_admin', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(b.status) ? `Pending (${b.status.replace('pending_', '').toUpperCase()})` : 
                                rtStatus.charAt(0).toUpperCase() + rtStatus.slice(1)}
                             </span>
-                            {['pending', 'approved', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(b.status) && (
+                            {['pending', 'approved', 'pending_hod', 'pending_admin', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'].includes(b.status) && (
                               <button className="btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); handleCancel(b._id); }} disabled={cancelling === b._id} title="Cancel this booking">
                                 🗑️
                               </button>
@@ -368,10 +368,14 @@ const formatDateTime = (value) => {
 
                         <div style={{ marginTop: '20px', borderTop: '1px solid #94a3b8', paddingTop: '12px' }}>
                           <h5 style={{ margin: '0 0 10px 0', fontSize: '11px', textTransform: 'uppercase', color: '#64748b' }}>Workflow Approvals Checklist:</h5>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
                             <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
                               <div>HOD</div>
                               <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                            </div>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>ADMIN</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'Admin') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
                             </div>
                             <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
                               <div>PRINCIPAL</div>
@@ -435,10 +439,14 @@ const formatDateTime = (value) => {
 
                         <div style={{ marginTop: '20px', borderTop: '1px solid #94a3b8', paddingTop: '12px' }}>
                           <h5 style={{ margin: '0 0 10px 0', fontSize: '11px', textTransform: 'uppercase', color: '#64748b' }}>Workflow Approvals Checklist:</h5>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', fontSize: '10px', textAlign: 'center' }}>
                             <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
                               <div>HOD</div>
                               <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'HOD') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
+                            </div>
+                            <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+                              <div>ADMIN</div>
+                              <strong style={{ color: '#10b981' }}>{selectedBooking.approvals?.some(a => a.stage === 'Admin') ? '✓ SIGNED' : '⏳ PENDING'}</strong>
                             </div>
                             <div style={{ padding: '8px', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
                               <div>PRINCIPAL</div>

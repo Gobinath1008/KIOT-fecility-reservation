@@ -51,6 +51,11 @@ export async function POST(request, props) {
       hasAuthority = true;
     }
     stageName = 'HOD';
+  } else if (currentStatus === 'pending_admin') {
+    if (userRole === 'admin' || userRole === 'super-admin') {
+      hasAuthority = true;
+    }
+    stageName = 'Admin';
   } else if (currentStatus === 'pending_principal') {
     if (userRole === 'principal') {
       hasAuthority = true;
@@ -128,6 +133,10 @@ export async function POST(request, props) {
 
   if (booking.serviceType === 'vehicle') {
     if (currentStatus === 'pending_hod') {
+      nextStatus = 'pending_admin';
+      nextRole = 'admin';
+      nextStageLabel = 'Admin';
+    } else if (currentStatus === 'pending_admin') {
       nextStatus = 'pending_principal';
       nextRole = 'principal';
       nextStageLabel = 'Principal';
@@ -151,6 +160,10 @@ export async function POST(request, props) {
     }
   } else if (booking.serviceType === 'room') {
     if (currentStatus === 'pending_hod') {
+      nextStatus = 'pending_admin';
+      nextRole = 'admin';
+      nextStageLabel = 'Admin';
+    } else if (currentStatus === 'pending_admin') {
       nextStatus = 'pending_principal';
       nextRole = 'principal';
       nextStageLabel = 'Principal';
