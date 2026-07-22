@@ -259,9 +259,12 @@ export const printSingleBooking = (booking) => {
   if (booking.serviceType === 'vehicle') {
     contentHtml = `
       <div style="font-family: 'Courier New', Courier, monospace, sans-serif; color: #111; max-width: 650px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <div style="text-align: center; border-bottom: 2px double #000; padding-bottom: 12px; marginBottom: 16px;">
-          <h2 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 1px;">KNOWLEDGE INSTITUTE OF TECHNOLOGY</h2>
-          <span style="font-size: 12px;">SALEM - 637 504 | VEHICLE REQUEST FORM</span>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; border-bottom: 2px double #000; padding-bottom: 12px; margin-bottom: 16px;">
+          <img src="/images/image.png" alt="Logo" style="height: 55px; width: auto;" />
+          <div style="text-align: center;">
+            <h2 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 1px;">KNOWLEDGE INSTITUTE OF TECHNOLOGY</h2>
+            <span style="font-size: 12px;">SALEM - 637 504 | VEHICLE REQUEST FORM</span>
+          </div>
         </div>
         
         <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px;">
@@ -316,9 +319,12 @@ export const printSingleBooking = (booking) => {
   } else if (booking.serviceType === 'room') {
     contentHtml = `
       <div style="font-family: Georgia, serif; color: #111; max-width: 650px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 16px;">
-          <h2 style="margin: 0; font-size: 18px; font-weight: bold;">REQUISITION FOR GUEST ACCOMMODATION</h2>
-          <span style="font-size: 11px; font-family: monospace; color: #555;">KIOT HOSTEL & ACCOMMODATION LOGS</span>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 16px;">
+          <img src="/images/image.png" alt="Logo" style="height: 55px; width: auto;" />
+          <div style="text-align: center;">
+            <h2 style="margin: 0; font-size: 18px; font-weight: bold;">REQUISITION FOR GUEST ACCOMMODATION</h2>
+            <span style="font-size: 11px; font-family: monospace; color: #555;">KIOT HOSTEL & ACCOMMODATION LOGS</span>
+          </div>
         </div>
 
         <div style="font-size: 13px; line-height: 1.6; margin-bottom: 16px;">
@@ -390,7 +396,10 @@ export const printSingleBooking = (booking) => {
   } else {
     contentHtml = `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <h3 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 8px; color: #1e3a8a;">🏛️ Seminar Hall Booking Requisition</h3>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 12px;">
+          <img src="/images/image.png" alt="Logo" style="height: 50px; width: auto;" />
+          <h3 style="margin: 0; color: #1e3a8a;">🏛️ Seminar Hall Booking Requisition</h3>
+        </div>
         <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px;">
           <tbody>
             <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold; width: 150px;">Seminar Hall:</td><td>${escape(booking.serviceId?.name || 'N/A')}</td></tr>
