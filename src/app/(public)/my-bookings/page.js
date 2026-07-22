@@ -73,7 +73,7 @@ export default function MyBookingsPage() {
     fetch('/api/auth/me')
       .then(res => res.ok ? res.json() : null)
       .then(me => {
-        if (me && ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(me.role)) {
+        if (me && ['principal', 'ao', 'transport_manager', 'hostel_warden'].includes(me.role)) {
           router.push('/admin');
         }
       })
