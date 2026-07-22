@@ -23,7 +23,7 @@ export default function AdminSidebar({ user }) {
       { href: '/admin/rooms', label: 'Rooms', icon: '🏨' },
     ] : []),
     { href: '/admin/bookings', label: 'Bookings', icon: '📋' },
-    ...(!isWorkflowApprover ? [{ href: '/', label: 'Booking Now', icon: '📅' }] : []),
+    ...(!isWorkflowApprover || user?.role === 'hod' ? [{ href: '/', label: 'Booking Now', icon: '📅' }] : []),
   ];
 
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
