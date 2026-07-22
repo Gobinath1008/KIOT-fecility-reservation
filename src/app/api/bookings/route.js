@@ -58,9 +58,11 @@ export async function GET(request) {
       query.user = user.id;
       if (status) query.status = status;
     } else {
-      // admin / super-admin / approver fetching without all=true (from the Manage Bookings page)
+      // admin / super-admin / HOD / approver fetching without all=true (from the Manage Bookings page)
       if (status) query.status = status;
-      if (userId) query.user = userId;
+      if (userId) {
+        query.user = userId;
+      }
     }
   } else {
     // fetching all bookings (e.g., checking availability)
@@ -82,13 +84,13 @@ export async function GET(request) {
   ];
 
 
-  const isUser = !user || (user.role !== 'admin' && user.role !== 'super-admin');
+  const isUser = !user || (user.role !== 'admin' && user.role !== 'super-admin' && !isWorkflowApprover);
 
-  const showHalls = user?.role === 'super-admin' || isUser || user.role === 'admin';
+  const showHalls = user?.role === 'super-admin' || isUser || user.role === 'admin' || isWorkflowApprover;
 
-  const showVehicles = user?.role === 'super-admin' || isUser || user.role === 'admin';
+  const showVehicles = user?.role === 'super-admin' || isUser || user.role === 'admin' || isWorkflowApprover;
 
-  const showRooms = user?.role === 'super-admin' || isUser || user.role === 'admin';
+  const showRooms = user?.role === 'super-admin' || isUser || user.role === 'admin' || isWorkflowApprover;
 
   if ((!serviceType || serviceType === 'hall') && showHalls) {
     const hallQuery = { ...query };
