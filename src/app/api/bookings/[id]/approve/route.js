@@ -181,21 +181,25 @@ export async function POST(request, props) {
     const targetEmail = booking.guestEmail || booking.user?.email;
     const targetName = booking.guestName || booking.user?.name;
     if (targetEmail) {
-      await sendBookingStatusUpdateEmail({
-        toEmail: targetEmail,
-        toName: targetName,
-        bookingType: booking.serviceType,
-        bookingId: booking._id.toString(),
-        status: 'approved',
-        notes: comment || 'Your booking has been approved.',
-        driverDetails: booking.serviceType === 'vehicle' ? {
-          driverName: booking.driverName,
-          driverPhone: booking.driverPhone,
-          assignedVehicleNumber: booking.assignedVehicleNumber,
-          totalKm: booking.totalKm,
-          transportManagerNote: booking.transportManagerNote
-        } : null
-      });
+      try {
+        await sendBookingStatusUpdateEmail({
+          toEmail: targetEmail,
+          toName: targetName,
+          bookingType: booking.serviceType,
+          bookingId: booking._id.toString(),
+          status: 'approved',
+          notes: comment || 'Your booking has been approved.',
+          driverDetails: booking.serviceType === 'vehicle' ? {
+            driverName: booking.driverName,
+            driverPhone: booking.driverPhone,
+            assignedVehicleNumber: booking.assignedVehicleNumber,
+            totalKm: booking.totalKm,
+            transportManagerNote: booking.transportManagerNote
+          } : null
+        });
+      } catch (err) {
+        console.error('[WORKFLOW] Failed to send final approval email notification:', err);
+      }
     }
   } else {
     try {
