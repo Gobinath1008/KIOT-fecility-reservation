@@ -259,8 +259,8 @@ export const printSingleBooking = (booking) => {
   if (booking.serviceType === 'vehicle') {
     contentHtml = `
       <div style="font-family: 'Courier New', Courier, monospace, sans-serif; color: #111; max-width: 650px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <div style="display: flex; align-items: center; justify-content: center; border-bottom: 2px double #000; padding-bottom: 12px; margin-bottom: 16px;">
-          <img src="/images/image.png" alt="Logo" style="height: 60px; max-width: 100%; object-fit: contain;" />
+        <div style="border-bottom: 2px double #000; padding-bottom: 12px; margin-bottom: 16px; text-align: center;">
+          <img src="/images/image.png" alt="Logo" style="width: 100%; height: auto; display: block; margin: 0 auto;" />
         </div>
         
         <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px;">
@@ -315,8 +315,8 @@ export const printSingleBooking = (booking) => {
   } else if (booking.serviceType === 'room') {
     contentHtml = `
       <div style="font-family: Georgia, serif; color: #111; max-width: 650px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <div style="display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 16px;">
-          <img src="/images/image.png" alt="Logo" style="height: 60px; max-width: 100%; object-fit: contain;" />
+        <div style="border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 16px; text-align: center;">
+          <img src="/images/image.png" alt="Logo" style="width: 100%; height: auto; display: block; margin: 0 auto;" />
         </div>
 
         <div style="font-size: 13px; line-height: 1.6; margin-bottom: 16px;">
@@ -388,8 +388,8 @@ export const printSingleBooking = (booking) => {
   } else {
     contentHtml = `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-        <div style="display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 12px;">
-          <img src="/images/image.png" alt="Logo" style="height: 60px; max-width: 100%; object-fit: contain;" />
+        <div style="border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 12px; text-align: center;">
+          <img src="/images/image.png" alt="Logo" style="width: 100%; height: auto; display: block; margin: 0 auto;" />
         </div>
         <table style="width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px;">
           <tbody>
