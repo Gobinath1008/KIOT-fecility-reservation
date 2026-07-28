@@ -108,14 +108,18 @@ export async function POST(request, props) {
     const targetEmail = booking.guestEmail || booking.user?.email;
     const targetName = booking.guestName || booking.user?.name;
     if (targetEmail) {
-      await sendBookingStatusUpdateEmail({
-        toEmail: targetEmail,
-        toName: targetName,
-        bookingType: booking.serviceType,
-        bookingId: booking._id.toString(),
-        status: 'rejected',
-        notes: comment || 'Rejected during sequential approvals.'
-      });
+      try {
+        await sendBookingStatusUpdateEmail({
+          toEmail: targetEmail,
+          toName: targetName,
+          bookingType: booking.serviceType,
+          bookingId: booking._id.toString(),
+          status: 'rejected',
+          notes: comment || 'Rejected during sequential approvals.'
+        });
+      } catch (err) {
+        console.error('[WORKFLOW] Failed to send rejection email notification:', err);
+      }
     }
 
     return NextResponse.json({ message: 'Booking rejected successfully', booking });
