@@ -222,42 +222,114 @@ export default function AdminDashboard() {
       animate={{ opacity: 1, y: 0 }} 
       transition={{ duration: 0.4 }}
       className="dashboard-page-container flex flex-col gap-8"
+      style={{ padding: '24px 16px 48px 16px' }}
     >
       {/* Welcome Header Panel */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 pb-4 mt-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-800" style={{ marginBottom: '8px' }}>
-            Welcome, <span className="text-indigo-600 font-bold">{welcomeName}</span>
+      <header style={{
+        background: 'linear-gradient(135deg, #1e1b4b, #312e81)',
+        borderRadius: '24px',
+        padding: '32px',
+        color: '#fff',
+        boxShadow: '0 10px 30px rgba(49, 46, 129, 0.15)',
+        position: 'relative',
+        overflow: 'hidden',
+        border: '1px solid rgba(255, 255, 255, 0.08)'
+      }}>
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <span style={{
+            background: 'rgba(99, 102, 241, 0.25)',
+            color: '#c7d2fe',
+            fontSize: '11px',
+            fontWeight: '700',
+            textTransform: 'uppercase',
+            letterSpacing: '1.5px',
+            padding: '6px 16px',
+            borderRadius: '999px',
+            display: 'inline-block',
+            marginBottom: '12px',
+            border: '1px solid rgba(165, 180, 252, 0.2)'
+          }}>
+            SYSTEM ACCESS ACTIVE
+          </span>
+          <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>
+            Welcome back, <span style={{ color: '#818cf8' }}>{welcomeName}</span>
           </h1>
-          <p className="text-slate-500 font-medium text-sm">
-            Here is what's happening with facility reservations today.
+          <p style={{ color: '#93c5fd', margin: '0', fontSize: '14px', fontWeight: '500', opacity: 0.9 }}>
+            Overview of facility resource utilization and approval dispatch queue.
           </p>
-          <div className="flex flex-wrap gap-x-8 gap-y-2 text-xs font-semibold text-slate-500 mt-2">
-            <div>
-              <span className="text-slate-700 font-bold">Department:</span>{' '}
-              <span className="text-slate-500 font-medium pl-1">{currentUser?.department || 'N/A'}</span>
+          
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#93c5fd', fontSize: '12px' }}>Department:</span>
+              <strong style={{ color: '#fff', fontSize: '13px' }}>{currentUser?.department || 'N/A'}</strong>
             </div>
-            {currentUser?.role && (
-              <div>
-                <span className="text-slate-700 font-bold">Role:</span>{' '}
-                <span className="text-indigo-600 font-medium capitalize pl-1">{currentUser.role.replace('_', ' ')}</span>
-              </div>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: '#93c5fd', fontSize: '12px' }}>Access Privilege:</span>
+              <strong style={{ color: '#38bdf8', fontSize: '13px', textTransform: 'capitalize' }}>
+                🛡️ {currentUser?.role?.replace('_', ' ') || 'Faculty'}
+              </strong>
+            </div>
           </div>
         </div>
+        {/* Subtle glass background glow */}
+        <div style={{
+          position: 'absolute',
+          top: '-50%',
+          right: '-20%',
+          width: '350px',
+          height: '350px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(99,102,241,0.4) 0%, rgba(99,102,241,0) 70%)',
+          filter: 'blur(40px)',
+          zIndex: 1
+        }} />
       </header>
 
       {/* Stats Cards Section */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
         {STAT_CARDS.map((card, idx) => (
           <Link key={idx} href={card.link}>
-            <div className="bg-white rounded-2xl border border-slate-200/50 p-6 flex items-center gap-4 hover:shadow-lg transition-all duration-350 cursor-pointer">
-              <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 shrink-0">
+            <div 
+              style={{
+                background: '#fff',
+                borderRadius: '20px',
+                border: '1.5px solid #e2e8f0',
+                padding: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '18px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                cursor: 'pointer',
+                height: '100%'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#818cf8';
+                e.currentTarget.style.boxShadow = '0 12px 20px -8px rgba(99, 102, 241, 0.15)';
+                e.currentTarget.style.transform = 'translateY(-3px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e2e8f0';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '14px',
+                background: 'rgba(99, 102, 241, 0.08)',
+                color: '#4f46e5',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
                 {card.icon}
               </div>
               <div>
-                <span className="text-xs font-semibold text-slate-400 block uppercase tracking-wider">{card.label}</span>
-                <span className="text-2xl font-bold text-slate-800 block mt-1">{card.value}</span>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block' }}>{card.label}</span>
+                <span style={{ fontSize: '26px', fontWeight: '800', color: '#1e293b', display: 'block', marginTop: '4px', letterSpacing: '-0.5px' }}>{card.value}</span>
               </div>
             </div>
           </Link>
@@ -265,52 +337,87 @@ export default function AdminDashboard() {
       </section>
 
       {/* Recent Bookings Section */}
-      <section className="bg-white rounded-2xl border border-slate-200/50 p-6 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-          <DocumentIcon /> Recent Reservation Requests
+      <section style={{
+        background: '#fff',
+        borderRadius: '24px',
+        border: '1.5px solid #e2e8f0',
+        padding: '28px',
+        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.04)'
+      }}>
+        <h3 style={{
+          fontSize: '18px',
+          fontWeight: '800',
+          color: '#1e293b',
+          margin: '0 0 20px 0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}>
+          <span style={{ padding: '6px', background: 'rgba(99,102,241,0.08)', color: '#4f46e5', borderRadius: '8px', display: 'inline-flex' }}>
+            <DocumentIcon />
+          </span>
+          Recent Reservation Requests
         </h3>
+        
         {recent.length === 0 ? (
-          <div className="text-center py-8 text-slate-400 text-sm">No recent bookings found.</div>
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8', fontSize: '14px', fontWeight: '500' }}>
+            📭 No active pending reservations.
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-slate-550">
-              <thead className="text-xs uppercase bg-slate-50 text-slate-400 font-bold">
-                <tr>
-                  <th className="px-6 py-3">Booked By</th>
-                  <th className="px-6 py-3">Asset Requested</th>
-                  <th className="px-6 py-3">Event Date / Time</th>
-                  <th className="px-6 py-3">Status</th>
+          <div style={{ overflowX: 'auto', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0' }}>
+                  <th style={{ padding: '16px', textAlign: 'left', color: '#475569', fontWeight: '700', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>Booked By</th>
+                  <th style={{ padding: '16px', textAlign: 'left', color: '#475569', fontWeight: '700', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>Asset Requested</th>
+                  <th style={{ padding: '16px', textAlign: 'left', color: '#475569', fontWeight: '700', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>Event Date / Time</th>
+                  <th style={{ padding: '16px', textAlign: 'left', color: '#475569', fontWeight: '700', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {recent.map((b) => {
+              <tbody style={{ divideY: '1px solid #f1f5f9' }}>
+                {recent.map((b, idx) => {
                   const details = getDetails(b);
                   const rtStatus = getRealTimeStatus(b);
                   const statusColors = {
-                    pending: 'bg-amber-50 text-amber-600 border-amber-100',
-                    approved: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-                    rejected: 'bg-rose-50 text-rose-600 border-rose-100',
-                    cancelled: 'bg-slate-50 text-slate-600 border-slate-100',
-                    live: 'bg-indigo-50 text-indigo-600 border-indigo-100',
-                    finished: 'bg-sky-50 text-sky-600 border-sky-100'
+                    pending: 'badge-pending',
+                    pending_hod: 'badge-pending',
+                    pending_admin: 'badge-pending',
+                    pending_principal: 'badge-pending',
+                    pending_ao: 'badge-pending',
+                    pending_transport: 'badge-pending',
+                    pending_warden: 'badge-pending',
+                    approved: 'badge-approved',
+                    rejected: 'badge-rejected',
+                    cancelled: 'badge-cancelled',
+                    live: 'badge-live',
+                    finished: 'badge-finished'
                   };
                   return (
-                    <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <strong className="text-slate-800 font-semibold block">{b.guestName || b.user?.name || 'N/A'}</strong>
-                        <span className="text-xs text-slate-400 font-medium">{b.department || b.user?.department || 'N/A'}</span>
+                    <tr 
+                      key={b._id} 
+                      style={{ 
+                        borderBottom: idx === recent.length - 1 ? 'none' : '1px solid #f1f5f9',
+                        transition: 'background 0.2s'
+                      }}
+                      className="hover:bg-slate-50/50"
+                    >
+                      <td style={{ padding: '18px 16px' }}>
+                        <strong style={{ color: '#1e293b', fontWeight: '700', display: 'block', fontSize: '14px' }}>{b.guestName || b.user?.name || 'N/A'}</strong>
+                        <span style={{ textTransform: 'uppercase', fontSize: '10px', color: '#64748b', fontWeight: '700', letterSpacing: '0.5px', marginTop: '2px', display: 'block' }}>
+                          {b.department || b.user?.department || 'N/A'}
+                        </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-slate-700 font-medium block">{details.resourceName}</span>
-                        <span className="text-xs text-slate-400 block mt-0.5">{details.info}</span>
+                      <td style={{ padding: '18px 16px' }}>
+                        <span style={{ color: '#334155', fontWeight: '600', display: 'block' }}>{details.resourceName}</span>
+                        <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '2px' }}>{details.info}</span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-slate-700 font-medium block">{details.date}</span>
-                        <span className="text-xs text-slate-450 block mt-0.5">{details.time}</span>
+                      <td style={{ padding: '18px 16px' }}>
+                        <span style={{ color: '#334155', fontWeight: '600', display: 'block' }}>{details.date}</span>
+                        <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '2px' }}>{details.time}</span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${statusColors[rtStatus] || 'bg-slate-50'}`}>
-                          {rtStatus.toUpperCase().replace('_', ' ')}
+                      <td style={{ padding: '18px 16px' }}>
+                        <span className={`badge ${statusColors[rtStatus] || 'badge-pending'}`} style={{ fontSize: '10px', fontWeight: '700', padding: '6px 14px' }}>
+                          {rtStatus.replace('pending_', 'PENDING ').replace('_', ' ').toUpperCase()}
                         </span>
                       </td>
                     </tr>
