@@ -60,7 +60,7 @@ export default function HomePage() {
           rooms: Array.isArray(rooms) ? rooms.length : 0,
           pending: Array.isArray(bookings) ? bookings.filter((x) => x.status === 'pending').length : 0,
         });
-        if (me && ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(me.role)) {
+        if (me && ['principal', 'ao', 'transport_manager', 'hostel_warden'].includes(me.role)) {
           router.push('/admin');
         } else {
           setCurrentUser(me);

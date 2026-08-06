@@ -4,6 +4,60 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 
+const ClipboardIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v10.5c0 .621.504 1.125 1.125 1.125h14.25c.621 0 1.125-.504 1.125-1.125V8.625c0-.621-.504-1.125-1.125-1.125H17.25" />
+  </svg>
+);
+
+const AcademicCapIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.57 50.57 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.906 59.906 0 0 1 10.399 5.84c-.89.244-1.777.514-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M12 13.49v.01" />
+  </svg>
+);
+
+const BuildingIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h18" />
+  </svg>
+);
+
+const CarIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.5m-9-3h-1.5m10.5 0H18m0 0H6.75A2.25 2.25 0 0 1 4.5 13.5v-3a2.25 2.25 0 0 1 2.25-2.25h10.5A2.25 2.25 0 0 1 19.5 10.5v3a2.25 2.25 0 0 1-2.25 2.25M6.75 8.25V6.375c0-.621.504-1.125 1.125-1.125h8.25c.621 0 1.125.504 1.125 1.125V8.25m-11.25 3h12" />
+  </svg>
+);
+
+const BedIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M5.25 5.25h13.5c1.104 0 2 .896 2 2v11.5c0 .276-.224.5-.5.5h-17c-.276 0-.5-.224-.5-.5V7.25c0-1.104.896-2 2-2Z" />
+  </svg>
+);
+
+const DocumentIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+  </svg>
+);
+
+const HourglassIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-sky-500 animate-pulse">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-emerald-500">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+  </svg>
+);
+
+const LinkIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-amber-500">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+  </svg>
+);
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ halls: 0, vehicles: 0, rooms: 0, totalBookings: 0, pendingCount: 0 });
   const [recent, setRecent] = useState([]);
@@ -79,6 +133,34 @@ export default function AdminDashboard() {
     fetchAll();
   }, []);
 
+  const getRealTimeStatus = (booking) => {
+    if (booking.status !== 'approved') return booking.status;
+
+    const now = new Date();
+    
+    if (booking.serviceType === 'hall' || booking.hallDate) {
+      const date = booking.hallDate || booking.date;
+      const startT = booking.hallStartTime || booking.startTime;
+      const endT = booking.hallEndTime || booking.endTime;
+      const start = new Date(`${date}T${startT}:00`);
+      const end = new Date(`${date}T${endT}:00`);
+      if (now >= start && now <= end) return 'live';
+      if (now > end) return 'finished';
+    } else if (booking.serviceType === 'vehicle' || booking.vehiclePickupDate) {
+      const start = new Date(`${booking.vehiclePickupDate}T${booking.vehiclePickupTime || '09:00'}:00`);
+      const end = new Date(`${booking.vehicleReturnDate}T${booking.vehicleReturnTime || '09:00'}:00`);
+      if (now >= start && now <= end) return 'live';
+      if (now > end) return 'finished';
+    } else if (booking.serviceType === 'room' || booking.roomCheckInDate) {
+      const start = new Date(`${booking.roomCheckInDate}T${booking.roomCheckInTime || '14:00'}:00`);
+      const end = new Date(`${booking.roomCheckOutDate}T${booking.roomCheckOutTime || '12:00'}:00`);
+      if (now >= start && now <= end) return 'live';
+      if (now > end) return 'finished';
+    }
+    
+    return 'approved';
+  };
+
   const formatTime12h = (timeStr) => {
     if (!timeStr) return '';
     const [hourStr, minStr] = timeStr.split(':');
@@ -115,45 +197,13 @@ export default function AdminDashboard() {
     return { date, time, info, resourceName };
   };
 
-  const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(currentUser?.role);
-
-  const STAT_CARDS = isWorkflowApprover 
-    ? [
-        { icon: '⏳', label: 'Awaiting Your Approval', value: stats.pendingCount, gradient: 'from-amber-500 to-orange-650', shadow: 'shadow-indigo-500/15' },
-        { icon: '📅', label: 'System Booking Volume', value: stats.totalBookings, gradient: 'from-indigo-500 to-indigo-650', shadow: 'shadow-indigo-500/15' }
-      ]
-    : [
-        { icon: '🏛️', label: 'Total Halls', value: stats.halls, gradient: 'from-violet-500 to-indigo-650', shadow: 'shadow-indigo-500/15' },
-        { icon: '🚗', label: 'Total Vehicles', value: stats.vehicles, gradient: 'from-sky-500 to-blue-650', shadow: 'shadow-blue-500/15' },
-        { icon: '🏨', label: 'Total Rooms', value: stats.rooms, gradient: 'from-emerald-500 to-teal-650', shadow: 'shadow-emerald-500/15' },
-        { icon: '📅', label: 'Total Bookings', value: stats.totalBookings, gradient: 'from-amber-500 to-orange-650', shadow: 'shadow-amber-500/15' },
-      ];
-
-  const isSuperAdmin = currentUser?.role === 'super-admin';
-
-  let QUICK_TOOLS = [
-    { href: '/admin/bookings', icon: '📋', label: 'Manage Bookings', sub: 'Review, filter & approve user requests', color: 'border-violet-100/80 hover:border-violet-300 hover:bg-violet-50/30 text-violet-600 bg-white' },
+  const STAT_CARDS = [
+    { icon: <BuildingIcon />, label: 'Halls Available', value: stats.halls, link: '/admin/halls' },
+    { icon: <CarIcon />, label: 'Vehicles Available', value: stats.vehicles, link: '/admin/vehicles' },
+    { icon: <BedIcon />, label: 'Rooms Available', value: stats.rooms, link: '/admin/rooms' },
+    { icon: <ClipboardIcon />, label: 'Total Bookings', value: stats.totalBookings, link: '/admin/bookings' },
+    { icon: <HourglassIcon />, label: 'Pending Approvals', value: stats.pendingCount, link: '/admin/bookings?status=pending' }
   ];
-
-  if (isSuperAdmin) {
-    QUICK_TOOLS.unshift({ href: '/admin/super-admin', icon: '👑', label: 'Super Admin Panel', sub: 'Configure administrators, user permissions & settings', color: 'border-purple-100/80 hover:border-purple-300 hover:bg-purple-50/30 text-purple-600 bg-white' });
-  }
-
-  // Only expose asset inventories and booking portal redirects to non-approver admin roles
-  if (!isWorkflowApprover) {
-    if (currentUser?.role === 'super-admin' || currentUser?.assignedServices?.includes('halls') || currentUser?.permissions?.hallAccess !== false) {
-      QUICK_TOOLS.push({ href: '/admin/halls', icon: '🏢', label: 'Halls Inventory', sub: 'Add, update or delete event halls data', color: 'border-indigo-100/80 hover:border-indigo-300 hover:bg-indigo-50/30 text-indigo-600 bg-white' });
-      QUICK_TOOLS.push({ href: '/halls', icon: '🏛️', label: 'Book a Hall', sub: 'Access portal to book seminar/conference halls', color: 'border-amber-100/80 hover:border-amber-300 hover:bg-amber-50/30 text-amber-600 bg-white' });
-    }
-    if (currentUser?.role === 'super-admin' || currentUser?.assignedServices?.includes('vehicles') || currentUser?.permissions?.vehicleAccess !== false) {
-      QUICK_TOOLS.push({ href: '/admin/vehicles', icon: '🚗', label: 'Vehicles Inventory', sub: 'Manage vehicle types and registrations', color: 'border-sky-100/80 hover:border-sky-300 hover:bg-sky-50/30 text-sky-600 bg-white' });
-      QUICK_TOOLS.push({ href: '/vehicle-booking', icon: '🚗', label: 'Book a Vehicle', sub: 'Access portal to reserve campus vehicles', color: 'border-blue-100/80 hover:border-blue-300 hover:bg-blue-50/30 text-blue-600 bg-white' });
-    }
-    if (currentUser?.role === 'super-admin' || currentUser?.assignedServices?.includes('rooms') || currentUser?.permissions?.guestRoomAccess !== false) {
-      QUICK_TOOLS.push({ href: '/admin/rooms', icon: '🏨', label: 'Rooms Inventory', sub: 'Control hostel accommodation statuses', color: 'border-emerald-100/80 hover:border-emerald-300 hover:bg-emerald-50/30 text-emerald-600 bg-white' });
-      QUICK_TOOLS.push({ href: '/room-booking', icon: '🛏️', label: 'Book a Room', sub: 'Access portal to reserve hostel/guest rooms', color: 'border-teal-100/80 hover:border-teal-300 hover:bg-teal-50/30 text-teal-600 bg-white' });
-    }
-  }
 
   if (loading) {
     return (
@@ -171,173 +221,105 @@ export default function AdminDashboard() {
       initial={{ opacity: 0, y: 15 }} 
       animate={{ opacity: 1, y: 0 }} 
       transition={{ duration: 0.4 }}
-      className="w-full p-10 flex flex-col gap-12 min-h-screen bg-[#f8fafc]"
+      className="dashboard-page-container flex flex-col gap-8"
     >
-      {/* Header Panel */}
-      <header className="flex justify-between items-center gap-6 pb-6 border-b border-slate-200/60 mb-12">
+      {/* Welcome Header Panel */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 pb-4 mt-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 uppercase tracking-widest mb-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-            System Control Panel
-          </div>
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-            Welcome back, {welcomeName} <span className="animate-wave inline-block origin-[70%_70%]">👋</span>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-800" style={{ marginBottom: '8px' }}>
+            Welcome, <span className="text-indigo-600 font-bold">{welcomeName}</span>
           </h1>
-          <p className="text-slate-400 text-sm font-medium mt-1">Here&apos;s an overview of your hall bookings and fleet management tools.</p>
-        </div>
-        <div className="flex flex-wrap gap-4 items-center shrink-0">
-          {isSuperAdmin && (
-            <Link 
-              href="/admin/super-admin" 
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-sm rounded-xl shadow-md shadow-indigo-600/10 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5"
-            >
-              👑 Super Admin Panel
-            </Link>
-          )}
-          <Link 
-            href="/admin/bookings?status=pending" 
-            className="px-6 py-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-extrabold text-sm rounded-xl shadow-sm hover:border-slate-350 transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5"
-          >
-            ⏳ Review Pending ({stats.pendingCount})
-          </Link>
+          <p className="text-slate-500 font-medium text-sm">
+            Here is what's happening with facility reservations today.
+          </p>
+          <div className="flex flex-wrap gap-x-8 gap-y-2 text-xs font-semibold text-slate-500 mt-2">
+            <div>
+              <span className="text-slate-700 font-bold">Department:</span>{' '}
+              <span className="text-slate-500 font-medium pl-1">{currentUser?.department || 'N/A'}</span>
+            </div>
+            {currentUser?.role && (
+              <div>
+                <span className="text-slate-700 font-bold">Role:</span>{' '}
+                <span className="text-indigo-600 font-medium capitalize pl-1">{currentUser.role.replace('_', ' ')}</span>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
-      {/* Stats Cards Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-        {STAT_CARDS.map((s, idx) => (
-          <motion.div 
-            key={s.label}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.08, duration: 0.35 }}
-            className="bg-white p-6 min-h-[220px] rounded-[20px] border border-slate-200/60 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.06)] transition-all duration-300 flex flex-col justify-center items-center text-center gap-3 group hover:-translate-y-1"
-          >
-            {/* Icon Top Center in a soft colored background box */}
-            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${s.gradient} text-white flex items-center justify-center text-xl shadow-md ${s.shadow} mx-auto`}>
-              {s.icon}
+      {/* Stats Cards Section */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+        {STAT_CARDS.map((card, idx) => (
+          <Link key={idx} href={card.link}>
+            <div className="bg-white rounded-2xl border border-slate-200/50 p-6 flex items-center gap-4 hover:shadow-lg transition-all duration-350 cursor-pointer">
+              <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 shrink-0">
+                {card.icon}
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-400 block uppercase tracking-wider">{card.label}</span>
+                <span className="text-2xl font-bold text-slate-800 block mt-1">{card.value}</span>
+              </div>
             </div>
-            {/* Label */}
-            <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{s.label}</span>
-            {/* Value */}
-            <span className="text-[32px] font-bold text-slate-900 tracking-tight leading-none group-hover:scale-105 transition-transform duration-300 block">{s.value}</span>
-            {/* Footer Text */}
-            <div className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">
-              Real-time update
-            </div>
-          </motion.div>
+          </Link>
         ))}
       </section>
 
-      {/* Quick Tools Section */}
-      <section className="space-y-6 mt-8">
-        <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest flex items-center gap-2 mb-4">
-          <span className="w-2 h-4 bg-indigo-600 rounded-full" />
-          Quick Operations
+      {/* Recent Bookings Section */}
+      <section className="bg-white rounded-2xl border border-slate-200/50 p-6 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <DocumentIcon /> Recent Reservation Requests
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {QUICK_TOOLS.map((t) => (
-            <Link key={t.href} href={t.href} className="group h-full">
-              <div className="p-6 min-h-[280px] rounded-[20px] border border-slate-200/80 bg-white hover:border-indigo-200 shadow-[0_10px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.06)] transition-all duration-300 h-full flex flex-col justify-center items-center text-center gap-4 hover:-translate-y-1.5">
-                {/* Icon Top Center wrapped in a soft background card box */}
-                <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-xl shadow-sm mx-auto">
-                  <span className="text-xl group-hover:scale-110 transition-transform duration-350">{t.icon}</span>
-                </div>
-                {/* Title */}
-                <span className="font-extrabold text-slate-900 text-base tracking-tight">{t.label}</span>
-                {/* Description */}
-                <p className="text-slate-550 text-xs font-medium leading-relaxed max-w-[80%]">{t.sub}</p>
-                {/* Link */}
-                <div className="text-[11px] font-extrabold text-slate-550 group-hover:text-slate-855 flex items-center gap-1.5 transition-colors self-center">
-                  Open Module <span className="group-hover:translate-x-1.5 transition-transform duration-250">→</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Pending Bookings Table */}
-      <section className="space-y-5 mt-8">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-widest flex items-center gap-2">
-            <span className="w-2 h-4 bg-indigo-600 rounded-full" />
-            Pending Booking Requests
-          </h3>
-          <Link href="/admin/bookings" className="text-xs font-extrabold text-indigo-650 hover:text-indigo-750 transition-colors flex items-center gap-1">
-            View All Bookings <span className="text-sm">↗</span>
-          </Link>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/85 overflow-hidden">
-          {recent.length === 0 ? (
-            <div className="min-h-[250px] bg-slate-50/20 border-dashed border-2 border-slate-200/60 rounded-2xl p-8 text-center flex flex-col items-center justify-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl border border-emerald-100 shadow-sm animate-pulse">
-                ✅
-              </div>
-              <div className="max-w-xs flex flex-col items-center justify-center">
-                <p className="font-extrabold text-slate-900 text-sm">All Caught Up!</p>
-                <p className="text-slate-500 text-xs mt-1.5 leading-relaxed">No pending booking requests require review at this time.</p>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50/70 border-b border-slate-100 text-slate-550 text-[10px] font-extrabold uppercase tracking-wider">
-                  <tr>
-                    <th className="px-6 py-4.5 font-bold">User Details</th>
-                    <th className="px-6 py-4.5 font-bold">Service Details</th>
-                    <th className="px-6 py-4.5 font-bold">Purpose</th>
-                    <th className="px-6 py-4.5 font-bold">Status</th>
-                    <th className="px-6 py-4.5 font-bold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {recent.map((b) => {
-                    const d = getDetails(b);
-                    return (
-                      <tr key={b._id} className="hover:bg-slate-50/30 transition-colors">
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-purple-650 rounded-full flex items-center justify-center text-white font-black text-sm shadow-sm">
-                              {b.user?.name?.[0]?.toUpperCase() || '?'}
-                            </div>
-                            <div>
-                              <div className="text-sm font-extrabold text-slate-900 leading-tight">
-                                {b.user?.name || 'Unknown'}
-                              </div>
-                              <div className="text-xs text-slate-450 mt-1.5 font-medium">
-                                {b.user?.department || b.user?.role || 'Guest User'}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <div className="text-sm font-extrabold text-slate-800">{d.resourceName}</div>
-                          <div className="text-xs text-slate-500 mt-1.5 font-medium">{d.date}</div>
-                          {d.time && <div className="text-xs text-slate-440 mt-1 font-medium">{d.time}</div>}
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-xs font-semibold text-slate-555 max-w-[200px] truncate">
-                          {d.info || '—'}
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <span className="px-3 py-0.5 text-[10px] font-extrabold rounded-full uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
-                            {b.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-right text-xs font-bold">
-                          <Link href={`/admin/bookings?bookingId=${b._id}`} className="px-4 py-2.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-650 hover:text-indigo-700 rounded-xl shadow-sm transition-all duration-200">
-                            Review Request
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        {recent.length === 0 ? (
+          <div className="text-center py-8 text-slate-400 text-sm">No recent bookings found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-slate-550">
+              <thead className="text-xs uppercase bg-slate-50 text-slate-400 font-bold">
+                <tr>
+                  <th className="px-6 py-3">Booked By</th>
+                  <th className="px-6 py-3">Asset Requested</th>
+                  <th className="px-6 py-3">Event Date / Time</th>
+                  <th className="px-6 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {recent.map((b) => {
+                  const details = getDetails(b);
+                  const rtStatus = getRealTimeStatus(b);
+                  const statusColors = {
+                    pending: 'bg-amber-50 text-amber-600 border-amber-100',
+                    approved: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                    rejected: 'bg-rose-50 text-rose-600 border-rose-100',
+                    cancelled: 'bg-slate-50 text-slate-600 border-slate-100',
+                    live: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                    finished: 'bg-sky-50 text-sky-600 border-sky-100'
+                  };
+                  return (
+                    <tr key={b._id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <strong className="text-slate-800 font-semibold block">{b.guestName || b.user?.name || 'N/A'}</strong>
+                        <span className="text-xs text-slate-400 font-medium">{b.department || b.user?.department || 'N/A'}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-slate-700 font-medium block">{details.resourceName}</span>
+                        <span className="text-xs text-slate-400 block mt-0.5">{details.info}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-slate-700 font-medium block">{details.date}</span>
+                        <span className="text-xs text-slate-450 block mt-0.5">{details.time}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${statusColors[rtStatus] || 'bg-slate-50'}`}>
+                          {rtStatus.toUpperCase().replace('_', ' ')}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </motion.div>
   );
