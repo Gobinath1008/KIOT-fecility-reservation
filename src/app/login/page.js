@@ -43,7 +43,8 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) { setError(data.message); return; }
-      if (data.user.role === 'admin' || data.user.role === 'super-admin') router.push('/admin');
+      const adminRoles = ['admin', 'super-admin', 'hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'];
+      if (adminRoles.includes(data.user.role)) router.push('/admin');
       else router.push('/');
       router.refresh();
     } catch {
