@@ -58,6 +58,37 @@ const LinkIcon = () => (
   </svg>
 );
 
+const getRealTimeStatus = (booking) => {
+  if (booking.status !== 'approved') return booking.status;
+
+  const now = new Date();
+  
+  if (booking.serviceType === 'hall' || booking.hallDate) {
+    const date = booking.hallDate || booking.date;
+    const startT = booking.hallStartTime || booking.startTime;
+    const endT = booking.hallEndTime || booking.endTime;
+    if (!date || !startT || !endT) return 'approved';
+    const start = new Date(`${date}T${startT}:00`);
+    const end = new Date(`${date}T${endT}:00`);
+    if (now >= start && now <= end) return 'live';
+    if (now > end) return 'finished';
+  } else if (booking.serviceType === 'vehicle' || booking.vehiclePickupDate) {
+    if (!booking.vehiclePickupDate || !booking.vehicleReturnDate) return 'approved';
+    const start = new Date(`${booking.vehiclePickupDate}T${booking.vehiclePickupTime || '09:00'}:00`);
+    const end = new Date(`${booking.vehicleReturnDate}T${booking.vehicleReturnTime || '17:00'}:00`);
+    if (now >= start && now <= end) return 'live';
+    if (now > end) return 'finished';
+  } else if (booking.serviceType === 'room' || booking.roomCheckInDate) {
+    if (!booking.roomCheckInDate || !booking.roomCheckOutDate) return 'approved';
+    const start = new Date(`${booking.roomCheckInDate}T${booking.roomCheckInTime || '14:00'}:00`);
+    const end = new Date(`${booking.roomCheckOutDate}T${booking.roomCheckOutTime || '12:00'}:00`);
+    if (now >= start && now <= end) return 'live';
+    if (now > end) return 'finished';
+  }
+  
+  return 'approved';
+};
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ halls: 0, vehicles: 0, rooms: 0, totalBookings: 0, pendingCount: 0 });
   const [recent, setRecent] = useState([]);
