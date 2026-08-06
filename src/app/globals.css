@@ -104,6 +104,7 @@ input, textarea, select { font-family: inherit; outline: none; }
   .app-main { padding-top: 94px; }
 }
 .container  { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+.dashboard-page-container { width: 100%; max-width: 1400px; margin: 0 auto; padding: 8px 12px 40px 12px; }
 .section    { padding: 48px 0; }
 
 /* ── Buttons ────────────────────────────────── */

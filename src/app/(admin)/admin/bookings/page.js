@@ -288,8 +288,7 @@ function ManageBookingsContent() {
     : STATUS_TABS;
 
   return (
-    <div className={styles.page}>
-      <div className="container">
+    <div className="dashboard-page-container">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
           <div className="page-header">
             <h1 className="page-title">Manage Bookings</h1>
@@ -413,7 +412,6 @@ function ManageBookingsContent() {
             })}
           </div>
         )}
-      </div>
 
       {/* Review Modal */}
       {modal && selected && (

@@ -1,4 +1,4 @@
-.page { padding: 36px 24px 80px; }
+.page { padding: 0; }
 
 .tabCount {
   display: inline-flex; align-items: center; justify-content: center;

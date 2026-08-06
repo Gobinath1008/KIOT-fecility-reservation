@@ -144,8 +144,7 @@ export default function VehiclesPage() {
   };
 
   return (
-    <div className={styles.page}>
-      <div className="container">
+    <div className="dashboard-page-container">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '36px', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>🚗 Vehicle Management</h1>
@@ -354,7 +353,6 @@ export default function VehiclesPage() {
             ))}
           </div>
         )}
-      </div>
     </div>
   );
 }

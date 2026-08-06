@@ -179,8 +179,7 @@ export default function SuperAdminDashboard() {
   }
 
   return (
-    <div className="w-full p-10 flex flex-col gap-12 min-h-screen bg-slate-50/30 selection:bg-indigo-100 selection:text-indigo-900">
-      <div className="container mx-auto px-4 max-w-7xl">
+    <div className="dashboard-page-container flex flex-col gap-8 selection:bg-indigo-100 selection:text-indigo-900">
         {/* Dashboard Title & Header */}
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: '24px', marginBottom: '48px', flexWrap: 'wrap' }}>
           <div>
@@ -747,7 +746,6 @@ export default function SuperAdminDashboard() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
     </div>
   );
 }

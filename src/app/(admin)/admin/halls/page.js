@@ -99,15 +99,14 @@ export default function ManageHallsPage() {
   };
 
   return (
-    <div className={styles.page}>
-      <div className="container">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '36px', flexWrap: 'wrap', gap: 16 }}>
-          <div>
-            <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>🏛️ Manage Halls</h1>
-            <p className="page-subtitle">{halls.length} halls registered in inventory</p>
-          </div>
-          <button className="btn-primary" onClick={openAdd}>➕ Add New Hall</button>
+    <div className="dashboard-page-container">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '36px', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>🏛️ Manage Halls</h1>
+          <p className="page-subtitle">{halls.length} halls registered in inventory</p>
         </div>
+        <button className="btn-primary" onClick={openAdd}>➕ Add New Hall</button>
+      </div>
 
         {loading ? (
           <div className="spinner-wrap"><div className="spinner" /></div>
@@ -150,7 +149,6 @@ export default function ManageHallsPage() {
             ))}
           </div>
         )}
-      </div>
 
       {/* Modal */}
       {modal && (
