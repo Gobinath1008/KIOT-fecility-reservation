@@ -17,11 +17,6 @@ export default function AdminSidebar({ user }) {
   const navLinks = [
     { href: '/admin', label: 'Dashboard', icon: '📊' },
     ...(isSuperAdmin ? [{ href: '/admin/super-admin', label: 'Super Admin', icon: '👑' }] : []),
-    ...(!isWorkflowApprover ? [
-      { href: '/admin/halls', label: 'Halls', icon: '🏛️' },
-      { href: '/admin/vehicles', label: 'Vehicles', icon: '🚗' },
-      { href: '/admin/rooms', label: 'Rooms', icon: '🏨' },
-    ] : []),
     { href: '/admin/bookings', label: 'Bookings', icon: '📋' },
     ...(!isWorkflowApprover || user?.role === 'hod' ? [{ href: '/', label: 'Booking Now', icon: '📅' }] : []),
   ];

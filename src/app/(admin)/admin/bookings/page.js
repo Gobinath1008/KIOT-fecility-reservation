@@ -63,7 +63,7 @@ function ManageBookingsContent() {
   const [activeService, setActiveService] = useState('all');
   const [modal, setModal] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [activeBookingId, setActiveBookingId] = useState(searchParams.get('bookingId') || null);
+  const [activeBookingId, setActiveBookingId] = useState(searchParams.get('bookingId') || searchParams.get('selected') || null);
   const [adminNote, setAdminNote] = useState('');
   const [updating, setUpdating] = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
@@ -115,8 +115,16 @@ function ManageBookingsContent() {
     setPendingAction(null);
 
     const params = new URLSearchParams(searchParams.toString());
+    let replaced = false;
     if (params.has('bookingId')) {
       params.delete('bookingId');
+      replaced = true;
+    }
+    if (params.has('selected')) {
+      params.delete('selected');
+      replaced = true;
+    }
+    if (replaced) {
       const search = params.toString();
       router.replace(`${pathname}${search ? `?${search}` : ''}`);
     }

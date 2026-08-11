@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
 
@@ -58,7 +59,49 @@ const LinkIcon = () => (
   </svg>
 );
 
+const getRealTimeStatus = (booking) => {
+  if (booking.status !== 'approved') return booking.status;
+
+  const now = new Date();
+  
+  if (booking.serviceType === 'hall' || booking.hallDate) {
+    const date = booking.hallDate || booking.date;
+    const startT = booking.hallStartTime || booking.startTime;
+    const endT = booking.hallEndTime || booking.endTime;
+    const start = new Date(`${date}T${startT}:00`);
+    const end = new Date(`${date}T${endT}:00`);
+    if (now >= start && now <= end) return 'live';
+    if (now > end) return 'finished';
+  } else if (booking.serviceType === 'vehicle' || booking.vehiclePickupDate) {
+    const start = new Date(`${booking.vehiclePickupDate}T${booking.vehiclePickupTime || '09:00'}:00`);
+    const end = new Date(`${booking.vehicleReturnDate}T${booking.vehicleReturnTime || '09:00'}:00`);
+    if (now >= start && now <= end) return 'live';
+    if (now > end) return 'finished';
+  } else if (booking.serviceType === 'room' || booking.roomCheckInDate) {
+    const start = new Date(`${booking.roomCheckInDate}T${booking.roomCheckInTime || '14:00'}:00`);
+    const end = new Date(`${booking.roomCheckOutDate}T${booking.roomCheckOutTime || '12:00'}:00`);
+    if (now >= start && now <= end) return 'live';
+    if (now > end) return 'finished';
+  }
+  
+  return 'approved';
+};
+
+const formatTime12h = (timeStr) => {
+  if (!timeStr) return '';
+  try {
+    const [h, m] = timeStr.split(':');
+    const hours = parseInt(h);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${m} ${ampm}`;
+  } catch (err) {
+    return timeStr;
+  }
+};
+
 export default function AdminDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState({ halls: 0, vehicles: 0, rooms: 0, totalBookings: 0, pendingCount: 0 });
   const [recent, setRecent] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,11 +117,12 @@ export default function AdminDashboard() {
           fetch('/api/bookings?all=true'),
           fetch('/api/auth/me')
         ]);
+        const user = meRes.ok ? await meRes.json() : null;
+        
         const halls = await hallsRes.json();
         const vehicles = await vehiclesRes.json();
         const rooms = await roomsRes.json();
         const bookings = await bookingsRes.json();
-        const user = meRes.ok ? await meRes.json() : null;
         setCurrentUser(user);
 
         const b = Array.isArray(bookings) ? bookings : [];
@@ -116,14 +160,54 @@ export default function AdminDashboard() {
           return isPending(x.status);
         });
 
+        let filteredBookings = [];
+        let deptPendingCount = 0;
+        let deptApprovedCount = 0;
+
+        if (user?.role === 'hod') {
+          filteredBookings = b.filter(x => {
+            const bDept = x.department || x.user?.department;
+            const isSameDept = user.department && bDept === user.department;
+            const rtStatus = getRealTimeStatus(x);
+            const isPendingForHod = x.status === 'pending_hod';
+            const isApproved = x.status === 'approved' || rtStatus === 'live';
+            if (isSameDept && isPendingForHod) deptPendingCount++;
+            if (isSameDept && isApproved) deptApprovedCount++;
+            return isSameDept && (isPendingForHod || isApproved);
+          });
+        } else if (user?.role === 'transport_manager') {
+          filteredBookings = b.filter(x => x.serviceType === 'vehicle');
+          filteredBookings.forEach(x => {
+            const rtStatus = getRealTimeStatus(x);
+            if (x.status === 'pending_transport') deptPendingCount++;
+            if (x.status === 'approved' || rtStatus === 'live') deptApprovedCount++;
+          });
+        } else if (user?.role === 'hostel_warden') {
+          filteredBookings = b.filter(x => x.serviceType === 'room');
+          filteredBookings.forEach(x => {
+            const rtStatus = getRealTimeStatus(x);
+            if (x.status === 'pending_warden') deptPendingCount++;
+            if (x.status === 'approved' || rtStatus === 'live') deptApprovedCount++;
+          });
+        } else {
+          filteredBookings = b;
+          filteredBookings.forEach(x => {
+            const rtStatus = getRealTimeStatus(x);
+            if (isPending(x.status)) deptPendingCount++;
+            if (x.status === 'approved' || rtStatus === 'live') deptApprovedCount++;
+          });
+        }
+
         setStats({
           halls: Array.isArray(halls) ? halls.length : 0,
           vehicles: Array.isArray(vehicles) ? vehicles.length : 0,
           rooms: Array.isArray(rooms) ? rooms.length : 0,
           totalBookings: b.length,
           pendingCount: pendingBookings.length,
+          deptPendingCount,
+          deptApprovedCount,
         });
-        setRecent(pendingBookings.slice(0, 6));
+        setRecent(filteredBookings.slice(0, 10));
       } catch (err) {
         console.error(err);
       } finally {
@@ -132,34 +216,6 @@ export default function AdminDashboard() {
     };
     fetchAll();
   }, []);
-
-  const getRealTimeStatus = (booking) => {
-    if (booking.status !== 'approved') return booking.status;
-
-    const now = new Date();
-    
-    if (booking.serviceType === 'hall' || booking.hallDate) {
-      const date = booking.hallDate || booking.date;
-      const startT = booking.hallStartTime || booking.startTime;
-      const endT = booking.hallEndTime || booking.endTime;
-      const start = new Date(`${date}T${startT}:00`);
-      const end = new Date(`${date}T${endT}:00`);
-      if (now >= start && now <= end) return 'live';
-      if (now > end) return 'finished';
-    } else if (booking.serviceType === 'vehicle' || booking.vehiclePickupDate) {
-      const start = new Date(`${booking.vehiclePickupDate}T${booking.vehiclePickupTime || '09:00'}:00`);
-      const end = new Date(`${booking.vehicleReturnDate}T${booking.vehicleReturnTime || '09:00'}:00`);
-      if (now >= start && now <= end) return 'live';
-      if (now > end) return 'finished';
-    } else if (booking.serviceType === 'room' || booking.roomCheckInDate) {
-      const start = new Date(`${booking.roomCheckInDate}T${booking.roomCheckInTime || '14:00'}:00`);
-      const end = new Date(`${booking.roomCheckOutDate}T${booking.roomCheckOutTime || '12:00'}:00`);
-      if (now >= start && now <= end) return 'live';
-      if (now > end) return 'finished';
-    }
-    
-    return 'approved';
-  };
 
   const formatTime12h = (timeStr) => {
     if (!timeStr) return '';
@@ -197,13 +253,20 @@ export default function AdminDashboard() {
     return { date, time, info, resourceName };
   };
 
-  const STAT_CARDS = [
-    { icon: <BuildingIcon />, label: 'Halls Available', value: stats.halls, link: '/admin/halls' },
-    { icon: <CarIcon />, label: 'Vehicles Available', value: stats.vehicles, link: '/admin/vehicles' },
-    { icon: <BedIcon />, label: 'Rooms Available', value: stats.rooms, link: '/admin/rooms' },
-    { icon: <ClipboardIcon />, label: 'Total Bookings', value: stats.totalBookings, link: '/admin/bookings' },
-    { icon: <HourglassIcon />, label: 'Pending Approvals', value: stats.pendingCount, link: '/admin/bookings?status=pending' }
-  ];
+  const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(currentUser?.role);
+
+  const STAT_CARDS = isWorkflowApprover
+    ? [
+        { icon: <ClipboardIcon />, label: 'Total Bookings', value: stats.totalBookings, link: '/admin/bookings' },
+        { icon: <HourglassIcon />, label: 'Pending Approvals', value: stats.pendingCount, link: '/admin/bookings?status=pending' }
+      ]
+    : [
+        { icon: <BuildingIcon />, label: 'Halls Available', value: stats.halls, link: '/admin/halls' },
+        { icon: <CarIcon />, label: 'Vehicles Available', value: stats.vehicles, link: '/admin/vehicles' },
+        { icon: <BedIcon />, label: 'Rooms Available', value: stats.rooms, link: '/admin/rooms' },
+        { icon: <ClipboardIcon />, label: 'Total Bookings', value: stats.totalBookings, link: '/admin/bookings' },
+        { icon: <HourglassIcon />, label: 'Pending Approvals', value: stats.pendingCount, link: '/admin/bookings?status=pending' }
+      ];
 
   if (loading) {
     return (
@@ -214,210 +277,129 @@ export default function AdminDashboard() {
     );
   }
 
-  const welcomeName = currentUser?.name || 'Admin';
+  const welcomeName = currentUser?.name || 'admin';
+  const displayRole = currentUser?.role === 'hod' ? 'Hod' : currentUser?.role ? currentUser.role.replace('_', ' ') : 'Admin';
 
   return (
     <motion.div 
       initial={{ opacity: 0, y: 15 }} 
       animate={{ opacity: 1, y: 0 }} 
       transition={{ duration: 0.4 }}
-      className="dashboard-page-container flex flex-col gap-8"
-      style={{ padding: '24px 16px 48px 16px' }}
+      className="dashboard-page-container flex flex-col gap-10 p-6 md:p-10"
     >
       {/* Welcome Header Panel */}
-      <header style={{
-        background: 'linear-gradient(135deg, #1e1b4b, #312e81)',
-        borderRadius: '24px',
-        padding: '32px',
-        color: '#fff',
-        boxShadow: '0 10px 30px rgba(49, 46, 129, 0.15)',
-        position: 'relative',
-        overflow: 'hidden',
-        border: '1px solid rgba(255, 255, 255, 0.08)'
-      }}>
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <span style={{
-            background: 'rgba(99, 102, 241, 0.25)',
-            color: '#c7d2fe',
-            fontSize: '11px',
-            fontWeight: '700',
-            textTransform: 'uppercase',
-            letterSpacing: '1.5px',
-            padding: '6px 16px',
-            borderRadius: '999px',
-            display: 'inline-block',
-            marginBottom: '12px',
-            border: '1px solid rgba(165, 180, 252, 0.2)'
-          }}>
-            SYSTEM ACCESS ACTIVE
-          </span>
-          <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>
-            Welcome back, <span style={{ color: '#818cf8' }}>{welcomeName}</span>
+      <header className="flex flex-col gap-3">
+        <div>
+          <h1 className="text-5xl font-extrabold tracking-tight text-slate-800" style={{ marginBottom: '8px', fontSize: '2.8rem' }}>
+            Welcome, <span className="font-extrabold" style={{ color: '#F59E0B' }}>{welcomeName}</span>
           </h1>
-          <p style={{ color: '#93c5fd', margin: '0', fontSize: '14px', fontWeight: '500', opacity: 0.9 }}>
-            Overview of facility resource utilization and approval dispatch queue.
+          <p className="font-semibold text-base italic" style={{ color: '#2563EB', marginBottom: '24px' }}>
+            Recognizing learning beyond the classroom.
           </p>
-          
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#93c5fd', fontSize: '12px' }}>Department:</span>
-              <strong style={{ color: '#fff', fontSize: '13px' }}>{currentUser?.department || 'N/A'}</strong>
+          <div className="flex flex-wrap gap-x-12 gap-y-2 text-sm font-semibold text-slate-700">
+            <div>
+              <span>Department:</span>{' '}
+              <span className="text-slate-500 font-medium pl-1">{currentUser?.department || 'B.E Mechanical Engineering'}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#93c5fd', fontSize: '12px' }}>Access Privilege:</span>
-              <strong style={{ color: '#38bdf8', fontSize: '13px', textTransform: 'capitalize' }}>
-                🛡️ {currentUser?.role?.replace('_', ' ') || 'Faculty'}
-              </strong>
+            <div>
+              <span>Role:</span>{' '}
+              <span className="font-bold pl-1 hover:underline cursor-pointer" style={{ color: '#3b82f6' }}>{displayRole}</span>
             </div>
           </div>
         </div>
-        {/* Subtle glass background glow */}
-        <div style={{
-          position: 'absolute',
-          top: '-50%',
-          right: '-20%',
-          width: '350px',
-          height: '350px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(99,102,241,0.4) 0%, rgba(99,102,241,0) 70%)',
-          filter: 'blur(40px)',
-          zIndex: 1
-        }} />
       </header>
 
       {/* Stats Cards Section */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-        {STAT_CARDS.map((card, idx) => (
-          <Link key={idx} href={card.link}>
-            <div 
-              style={{
-                background: '#fff',
-                borderRadius: '20px',
-                border: '1.5px solid #e2e8f0',
-                padding: '24px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '18px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-                cursor: 'pointer',
-                height: '100%'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#818cf8';
-                e.currentTarget.style.boxShadow = '0 12px 20px -8px rgba(99, 102, 241, 0.15)';
-                e.currentTarget.style.transform = 'translateY(-3px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#e2e8f0';
-                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              <div style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '14px',
-                background: 'rgba(99, 102, 241, 0.08)',
-                color: '#4f46e5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                {card.icon}
-              </div>
-              <div>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px', display: 'block' }}>{card.label}</span>
-                <span style={{ fontSize: '26px', fontWeight: '800', color: '#1e293b', display: 'block', marginTop: '4px', letterSpacing: '-0.5px' }}>{card.value}</span>
-              </div>
-            </div>
-          </Link>
-        ))}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4 max-w-4xl">
+        {/* Pending Requests Card */}
+        <div 
+          onClick={() => router.push('/admin/bookings?status=pending')}
+          style={{ cursor: 'pointer' }}
+          className="bg-white rounded-[24px] p-6 flex items-center gap-4 border border-slate-100/85 shadow-[0_8px_30px_rgb(0,0,0,0.015)] hover:border-amber-250 hover:shadow-md transition-all"
+        >
+          <div className="w-14 h-14 rounded-full flex items-center justify-center text-amber-500 shrink-0" style={{ backgroundColor: '#FEF3C7' }}>
+            <HourglassIcon />
+          </div>
+          <div>
+            <span className="text-sm font-semibold text-slate-400 block uppercase tracking-wider">Pending Requests</span>
+            <span className="text-3xl font-extrabold text-slate-800 block mt-1">{stats.deptPendingCount}</span>
+          </div>
+        </div>
+
+        {/* Approved/Booked Card */}
+        <div 
+          onClick={() => router.push('/admin/bookings?status=approved')}
+          style={{ cursor: 'pointer' }}
+          className="bg-white rounded-[24px] p-6 flex items-center gap-4 border border-slate-100/85 shadow-[0_8px_30px_rgb(0,0,0,0.015)] hover:border-emerald-250 hover:shadow-md transition-all"
+        >
+          <div className="w-14 h-14 rounded-full flex items-center justify-center text-emerald-500 shrink-0" style={{ backgroundColor: '#D1FAE5' }}>
+            <CheckIcon />
+          </div>
+          <div>
+            <span className="text-sm font-semibold text-slate-400 block uppercase tracking-wider">Booked / Approved</span>
+            <span className="text-3xl font-extrabold text-slate-800 block mt-1">{stats.deptApprovedCount}</span>
+          </div>
+        </div>
       </section>
 
       {/* Recent Bookings Section */}
-      <section style={{
-        background: '#fff',
-        borderRadius: '24px',
-        border: '1.5px solid #e2e8f0',
-        padding: '28px',
-        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.04)'
-      }}>
-        <h3 style={{
-          fontSize: '18px',
-          fontWeight: '800',
-          color: '#1e293b',
-          margin: '0 0 20px 0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
-          <span style={{ padding: '6px', background: 'rgba(99,102,241,0.08)', color: '#4f46e5', borderRadius: '8px', display: 'inline-flex' }}>
-            <DocumentIcon />
-          </span>
-          Recent Reservation Requests
+      <section className="bg-white rounded-2xl border border-slate-200/50 p-6 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <DocumentIcon /> {currentUser?.role === 'hod' ? 'Department Bookings & Approvals (Pending & Approved)' : 'Recent Reservation Requests'}
         </h3>
-        
         {recent.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8', fontSize: '14px', fontWeight: '500' }}>
-            📭 No active pending reservations.
-          </div>
+          <div className="text-center py-8 text-slate-400 text-sm">No bookings found.</div>
         ) : (
-          <div style={{ overflowX: 'auto', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #e2e8f0' }}>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#475569', fontWeight: '700', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>Booked By</th>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#475569', fontWeight: '700', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>Asset Requested</th>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#475569', fontWeight: '700', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>Event Date / Time</th>
-                  <th style={{ padding: '16px', textAlign: 'left', color: '#475569', fontWeight: '700', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>Status</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left text-slate-550">
+              <thead className="text-xs uppercase bg-slate-50 text-slate-400 font-bold">
+                <tr>
+                  <th className="px-6 py-3">Booked By</th>
+                  <th className="px-6 py-3">Asset Requested</th>
+                  <th className="px-6 py-3">Event Date / Time</th>
+                  <th className="px-6 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody style={{ divideY: '1px solid #f1f5f9' }}>
-                {recent.map((b, idx) => {
+              <tbody className="divide-y divide-slate-100">
+                {recent.map((b) => {
                   const details = getDetails(b);
                   const rtStatus = getRealTimeStatus(b);
                   const statusColors = {
-                    pending: 'badge-pending',
-                    pending_hod: 'badge-pending',
-                    pending_admin: 'badge-pending',
-                    pending_principal: 'badge-pending',
-                    pending_ao: 'badge-pending',
-                    pending_transport: 'badge-pending',
-                    pending_warden: 'badge-pending',
-                    approved: 'badge-approved',
-                    rejected: 'badge-rejected',
-                    cancelled: 'badge-cancelled',
-                    live: 'badge-live',
-                    finished: 'badge-finished'
+                    pending: 'bg-amber-50 text-amber-600 border-amber-100',
+                    pending_hod: 'bg-amber-50 text-amber-600 border-amber-100',
+                    pending_admin: 'bg-amber-50 text-amber-600 border-amber-100',
+                    pending_principal: 'bg-amber-50 text-amber-600 border-amber-100',
+                    pending_ao: 'bg-amber-50 text-amber-600 border-amber-100',
+                    pending_transport: 'bg-amber-50 text-amber-600 border-amber-100',
+                    pending_warden: 'bg-amber-50 text-amber-600 border-amber-100',
+                    approved: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                    rejected: 'bg-rose-50 text-rose-600 border-rose-100',
+                    cancelled: 'bg-slate-50 text-slate-600 border-slate-100',
+                    live: 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                    finished: 'bg-sky-50 text-sky-600 border-sky-100'
                   };
                   return (
                     <tr 
                       key={b._id} 
-                      style={{ 
-                        borderBottom: idx === recent.length - 1 ? 'none' : '1px solid #f1f5f9',
-                        transition: 'background 0.2s'
-                      }}
-                      className="hover:bg-slate-50/50"
+                      onClick={() => router.push(`/admin/bookings?selected=${b._id}`)}
+                      style={{ cursor: 'pointer' }}
+                      className="hover:bg-slate-50/75 transition-colors"
                     >
-                      <td style={{ padding: '18px 16px' }}>
-                        <strong style={{ color: '#1e293b', fontWeight: '700', display: 'block', fontSize: '14px' }}>{b.guestName || b.user?.name || 'N/A'}</strong>
-                        <span style={{ textTransform: 'uppercase', fontSize: '10px', color: '#64748b', fontWeight: '700', letterSpacing: '0.5px', marginTop: '2px', display: 'block' }}>
-                          {b.department || b.user?.department || 'N/A'}
-                        </span>
+                      <td className="px-6 py-4">
+                        <strong className="text-slate-800 font-semibold block">{b.guestName || b.user?.name || 'N/A'}</strong>
+                        <span className="text-xs text-slate-400 font-medium">{b.department || b.user?.department || 'N/A'}</span>
                       </td>
-                      <td style={{ padding: '18px 16px' }}>
-                        <span style={{ color: '#334155', fontWeight: '600', display: 'block' }}>{details.resourceName}</span>
-                        <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '2px' }}>{details.info}</span>
+                      <td className="px-6 py-4">
+                        <span className="text-slate-700 font-medium block">{details.resourceName}</span>
+                        <span className="text-xs text-slate-400 block mt-0.5">{details.info}</span>
                       </td>
-                      <td style={{ padding: '18px 16px' }}>
-                        <span style={{ color: '#334155', fontWeight: '600', display: 'block' }}>{details.date}</span>
-                        <span style={{ fontSize: '11px', color: '#64748b', display: 'block', marginTop: '2px' }}>{details.time}</span>
+                      <td className="px-6 py-4">
+                        <span className="text-slate-700 font-medium block">{details.date}</span>
+                        <span className="text-xs text-slate-450 block mt-0.5">{details.time}</span>
                       </td>
-                      <td style={{ padding: '18px 16px' }}>
-                        <span className={`badge ${statusColors[rtStatus] || 'badge-pending'}`} style={{ fontSize: '10px', fontWeight: '700', padding: '6px 14px' }}>
-                          {rtStatus.replace('pending_', 'PENDING ').replace('_', ' ').toUpperCase()}
+                      <td className="px-6 py-4">
+                        <span className={`px-2.5 py-1 text-xs font-semibold rounded-full border ${statusColors[rtStatus] || statusColors[b.status] || 'bg-slate-50'}`}>
+                          {(rtStatus || b.status).toUpperCase().replace('_', ' ')}
                         </span>
                       </td>
                     </tr>

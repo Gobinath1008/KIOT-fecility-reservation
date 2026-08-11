@@ -22,6 +22,33 @@ const hasOverlap = (start1, end1, start2, end2) => {
 
 export async function GET(request) {
   await connectDB();
+
+  // Auto-cancel past pending bookings
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(now.getTime() + istOffset);
+  const todayStr = istTime.toISOString().split('T')[0]; // "YYYY-MM-DD"
+  const pendingStatuses = ['pending', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_transport', 'pending_warden'];
+
+  try {
+    await Promise.all([
+      HallBooking.updateMany(
+        { status: { $in: pendingStatuses }, hallDate: { $lt: todayStr } },
+        { $set: { status: 'cancelled', cancellationReason: 'Automatically cancelled: Booking date passed without approval.', cancelledAt: now } }
+      ),
+      VehicleBooking.updateMany(
+        { status: { $in: pendingStatuses }, vehiclePickupDate: { $lt: todayStr } },
+        { $set: { status: 'cancelled', cancellationReason: 'Automatically cancelled: Booking date passed without approval.', cancelledAt: now } }
+      ),
+      RoomBooking.updateMany(
+        { status: { $in: pendingStatuses }, roomCheckInDate: { $lt: todayStr } },
+        { $set: { status: 'cancelled', cancellationReason: 'Automatically cancelled: Booking date passed without approval.', cancelledAt: now } }
+      )
+    ]);
+  } catch (err) {
+    console.error('Error auto-cancelling past pending bookings:', err);
+  }
+
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const serviceType = searchParams.get('serviceType');
