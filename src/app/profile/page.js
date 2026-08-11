@@ -63,7 +63,7 @@ export default function ProfilePage() {
         // Detect if active department matches any PG list options to initialize courseType dropdown
         const isPg = pgDepartments.includes(data.department);
         const isUg = ugDepartments.includes(data.department);
-        const detectedCourseType = isPg ? 'PG' : (isUg ? 'UG' : '');
+        const detectedCourseType = isPg ? 'PG' : (isUg ? 'UG' : (data.department === 'Other' ? 'Other' : ''));
 
         setForm({
           name: data.name || '',
@@ -269,6 +269,7 @@ export default function ProfilePage() {
                       <option value="">Select Course Type</option>
                       <option value="UG">UG (Undergraduate)</option>
                       <option value="PG">PG (Postgraduate)</option>
+                      <option value="Other">Other</option>
                     </select>
                   </label>
 
@@ -283,7 +284,7 @@ export default function ProfilePage() {
                       style={{ border: '1px solid #cbd5e1', borderRadius: 12, padding: '12px 13px', fontSize: 14, color: '#0f172a', outline: 'none', background: '#fff' }}
                     >
                       <option value="">Select Department</option>
-                      {(form.courseType === 'UG' ? ugDepartments : form.courseType === 'PG' ? pgDepartments : []).map(dept => (
+                      {(form.courseType === 'UG' ? [...ugDepartments, 'Other'] : form.courseType === 'PG' ? [...pgDepartments, 'Other'] : form.courseType === 'Other' ? ['Other'] : []).map(dept => (
                         <option key={dept} value={dept}>{dept}</option>
                       ))}
                     </select>

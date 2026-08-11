@@ -40,10 +40,12 @@ export default function RegisterPage() {
 
   const departmentsList =
     form.courseType === "UG"
-      ? ugDepartments
+      ? [...ugDepartments, "Other"]
       : form.courseType === "PG"
-        ? pgDepartments
-        : [];
+        ? [...pgDepartments, "Other"]
+        : form.courseType === "Other"
+          ? ["Other"]
+          : [];
 
   const setField = (k, v) => {
     setForm(f => ({ ...f, [k]: v }));
@@ -193,6 +195,7 @@ export default function RegisterPage() {
                   <option value="">Select</option>
                   <option value="UG">UG</option>
                   <option value="PG">PG</option>
+                  <option value="Other">Other</option>
                 </select>
                 {errors.courseType && <p className={styles.fieldError}>⚠ {errors.courseType}</p>}
               </div>
