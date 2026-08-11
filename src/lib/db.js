@@ -69,8 +69,8 @@ export async function connectDB() {
       await sequelize.authenticate();
       console.log('Successfully connected to MySQL database.');
 
-      // Automatically create or alter tables to match defined schemas
-      await sequelize.sync({ alter: true });
+      // Automatically create tables to match defined schemas
+      await sequelize.sync();
       console.log('Database schemas synchronized successfully.');
 
       return sequelize;

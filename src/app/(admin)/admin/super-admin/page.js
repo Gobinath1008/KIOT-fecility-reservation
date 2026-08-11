@@ -149,6 +149,22 @@ export default function SuperAdminDashboard() {
     }
   };
 
+  const handleDeleteUser = async (userId) => {
+    if (!confirm('Are you sure you want to delete this user account permanently? This action cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchData();
+        toast.success('User account deleted successfully');
+      } else {
+        const err = await res.json();
+        toast.error(err.message || 'Failed to delete user account');
+      }
+    } catch (error) {
+      toast.error('Error deleting user account');
+    }
+  };
+
   const getBookingStats = () => {
     if (!bookings.length) return { total: 0, pending: 0, approved: 0, rejected: 0, cancelled: 0 };
     return {
@@ -431,9 +447,14 @@ export default function SuperAdminDashboard() {
                         </td>
                         <td className="px-6 py-5.5 text-right">
                           {user.role !== 'super-admin' && (
-                            <button onClick={() => setShowUserModal(user)} className="text-xs font-semibold text-slate-655 hover:text-indigo-650 bg-white border border-slate-200 px-3.5 py-2 rounded-xl shadow-sm hover:bg-slate-50 hover:border-indigo-200 transition-all duration-200">
-                              Edit Permissions
-                            </button>
+                            <div className="flex justify-end gap-2">
+                              <button onClick={() => setShowUserModal(user)} className="text-xs font-semibold text-slate-655 hover:text-indigo-650 bg-white border border-slate-200 px-3.5 py-2 rounded-xl shadow-sm hover:bg-slate-50 hover:border-indigo-200 transition-all duration-200">
+                                Edit Permissions
+                              </button>
+                              <button onClick={() => handleDeleteUser(user._id)} className="text-xs font-semibold text-rose-600 hover:text-rose-700 bg-white border border-slate-200 px-3.5 py-2 rounded-xl shadow-sm hover:bg-rose-50 hover:border-rose-200 transition-all duration-200">
+                                Delete
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>

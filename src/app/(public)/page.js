@@ -46,13 +46,12 @@ export default function HomePage() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/halls').catch(() => ({ json: () => [] })),
-      fetch('/api/vehicles').catch(() => ({ json: () => [] })),
-      fetch('/api/rooms').catch(() => ({ json: () => [] })),
-      fetch('/api/bookings').catch(() => ({ json: () => [] })),
+      fetch('/api/halls').then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      fetch('/api/vehicles').then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      fetch('/api/rooms').then((r) => (r.ok ? r.json() : [])).catch(() => []),
+      fetch('/api/bookings').then((r) => (r.ok ? r.json() : [])).catch(() => []),
       fetch('/api/auth/me').then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ])
-      .then((responses) => Promise.all(responses.map((r) => (r && typeof r.json === 'function' ? r.json() : r))))
       .then(([halls, vehicles, rooms, bookings, me]) => {
         setStats({
           halls: Array.isArray(halls) ? halls.length : 0,
