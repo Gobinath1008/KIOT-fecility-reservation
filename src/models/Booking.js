@@ -31,6 +31,7 @@ const BookingSchema = new mongoose.Schema({
   numberOfGuests: Number,
   numberOfRooms: { type: Number, default: 1 },
   specialRequests: String,
+  foodOption: { type: String, enum: ['regular', 'normal'], default: 'normal' },
 
   // Common fields
   status: { type: String, enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed'], default: 'pending' },

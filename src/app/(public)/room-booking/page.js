@@ -109,58 +109,27 @@ export default function RoomBookingPage() {
     }
   };
 
-  const getRoomStatusDetails = (roomId) => {
+  const getRoomStatusDetails = (room) => {
+    const roomId = room._id;
     const roomBookings = dateBookings.filter(b => (b.serviceId?._id || b.serviceId) === roomId && b.status !== 'rejected' && b.status !== 'cancelled');
     
     if (roomBookings.length === 0) {
       return { status: 'available', label: 'Available' };
     }
 
-    const hasMultiDay = roomBookings.some(b => b.roomCheckInDate !== b.roomCheckOutDate);
-    
-    const parseTimeToMinutes = (timeStr) => {
-      if (!timeStr) return 0;
-      const [h, m] = timeStr.split(':').map(Number);
-      return isNaN(h) ? 0 : h * 60 + (m || 0);
-    };
+    const totalBookedGuests = roomBookings.reduce((sum, b) => sum + (b.numberOfGuests || 1), 0);
+    const capacity = room.occupancy || 3;
 
-    let totalHours = 0;
-    if (hasMultiDay) {
-      totalHours = 24; // > 2 hours
-    } else {
-      let totalMinutes = 0;
-      roomBookings.forEach(b => {
-        const start = parseTimeToMinutes(b.roomCheckInTime || '14:00');
-        const end = parseTimeToMinutes(b.roomCheckOutTime || '12:00');
-        if (end > start) {
-          totalMinutes += (end - start);
-        }
-      });
-      totalHours = totalMinutes / 60;
-    }
-
-    let isMorning = true;
-    if (roomBookings[0]?.roomCheckInTime) {
-      const firstStartHour = parseInt(roomBookings[0].roomCheckInTime.split(':')[0], 10);
-      if (firstStartHour >= 12) {
-        isMorning = false;
-      }
-    }
-
-    if (totalHours <= 2) {
-      return {
-        status: 'partially-booked',
-        label: `Partially Booked (${isMorning ? 'Morning' : 'Evening'})`
-      };
-    } else if (totalHours <= 4) {
-      return {
-        status: 'partially-booked',
-        label: `Partially Booked (${isMorning ? 'Morning to Afternoon' : 'Afternoon to Evening'})`
-      };
-    } else {
+    if (totalBookedGuests >= capacity) {
       return {
         status: 'fully-booked',
-        label: 'Booked (Morning to Evening)'
+        label: `Fully Booked (${totalBookedGuests}/${capacity} Beds)`
+      };
+    } else {
+      const remaining = capacity - totalBookedGuests;
+      return {
+        status: 'partially-booked',
+        label: `Partially Booked (${totalBookedGuests}/${capacity} Beds, ${remaining} Left)`
       };
     }
   };
@@ -267,12 +236,12 @@ export default function RoomBookingPage() {
               {[...rooms]
                 .sort((a, b) => {
                   const statusPriority = { 'available': 1, 'partially-booked': 2, 'fully-booked': 3 };
-                  const priorityA = statusPriority[getRoomStatusDetails(a._id).status] || 99;
-                  const priorityB = statusPriority[getRoomStatusDetails(b._id).status] || 99;
+                  const priorityA = statusPriority[getRoomStatusDetails(a).status] || 99;
+                  const priorityB = statusPriority[getRoomStatusDetails(b).status] || 99;
                   return priorityA - priorityB;
                 })
                 .map((room, idx) => {
-                const statusDetails = getRoomStatusDetails(room._id);
+                const statusDetails = getRoomStatusDetails(room);
                 const status = statusDetails.status;
                 const statusLabel = statusDetails.label;
                 const roomBookings = dateBookings.filter(b => (b.serviceId?._id || b.serviceId) === room._id && b.status !== 'rejected' && b.status !== 'cancelled');

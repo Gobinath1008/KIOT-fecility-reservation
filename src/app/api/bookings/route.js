@@ -170,7 +170,7 @@ export async function POST(request) {
     hallDate, hallStartTime, hallEndTime, purpose, attendees,
     vehiclePickupDate, vehicleReturnDate, vehiclePickupTime, vehicleReturnTime, pickupLocation, returnLocation, withDriver, fuelOption,
     roomCheckInDate, roomCheckOutDate, roomCheckInTime, roomCheckOutTime, numberOfGuests, specialRequests, roomPurpose,
-    guestName, guestEmail, guestPhone
+    guestName, guestEmail, guestPhone, foodOption
   } = body;
 
   if (!serviceType || !serviceId) {
@@ -294,16 +294,49 @@ export async function POST(request) {
 
     const newStart = roomCheckInTime ? `${roomCheckInDate}T${roomCheckInTime}:00` : `${roomCheckInDate}T14:00:00`;
     const newEnd = roomCheckOutTime ? `${roomCheckOutDate}T${roomCheckOutTime}:00` : `${roomCheckOutDate}T12:00:00`;
+    const newGuests = parseInt(numberOfGuests || 1);
 
+    const overlappingBookings = [];
     for (const booking of conflicts) {
       const existingStartStr = booking.roomCheckInTime ? `${booking.roomCheckInDate}T${booking.roomCheckInTime}:00` : `${booking.roomCheckInDate}T14:00:00`;
       const existingEndStr = booking.roomCheckOutTime ? `${booking.roomCheckOutDate}T${booking.roomCheckOutTime}:00` : `${booking.roomCheckOutDate}T12:00:00`;
 
       if (hasOverlap(newStart, newEnd, existingStartStr, existingEndStr)) {
-        return NextResponse.json({
-          message: 'Room already booked for these dates.',
-          status: 409
-        }, { status: 409 });
+        overlappingBookings.push({
+          start: new Date(existingStartStr).getTime(),
+          end: new Date(existingEndStr).getTime(),
+          guests: parseInt(booking.numberOfGuests || 1)
+        });
+      }
+    }
+
+    if (overlappingBookings.length > 0) {
+      const roomCapacity = service.occupancy || 3;
+      const newStartMs = new Date(newStart).getTime();
+      const newEndMs = new Date(newEnd).getTime();
+      const timestamps = Array.from(new Set([
+        newStartMs,
+        newEndMs,
+        ...overlappingBookings.flatMap(b => [b.start, b.end])
+      ])).sort((a, b) => a - b);
+
+      for (let i = 0; i < timestamps.length - 1; i++) {
+        const midPoint = (timestamps[i] + timestamps[i + 1]) / 2;
+        if (midPoint >= newStartMs && midPoint <= newEndMs) {
+          let activeGuests = newGuests;
+          for (const b of overlappingBookings) {
+            if (midPoint >= b.start && midPoint <= b.end) {
+              activeGuests += b.guests;
+            }
+          }
+          if (activeGuests > roomCapacity) {
+            const bookedAlready = activeGuests - newGuests;
+            return NextResponse.json({
+              message: `Not enough beds available. Only ${roomCapacity - bookedAlready} bed(s) remaining for part of this range.`,
+              status: 409
+            }, { status: 409 });
+          }
+        }
       }
     }
   }
@@ -359,6 +392,7 @@ export async function POST(request) {
       roomCheckOutTime,
       numberOfGuests,
       roomPurpose: roomPurpose || purpose,
+      foodOption: foodOption || 'normal',
       guestName: guestName || currentUser.name,
       guestEmail: guestEmail || currentUser.email,
       guestPhone: guestPhone || currentUser.phone,
@@ -369,6 +403,28 @@ export async function POST(request) {
   }
 
   const populated = await createdBooking.populate('user', 'name email phone department role');
+
+  // Send notification email to all standard admins for any new booking
+  try {
+    const origin = request.headers.get('origin') || 'http://localhost:3000';
+    const admins = await User.find({ role: 'admin' });
+    for (const adminUser of admins) {
+      if (adminUser.email) {
+        await sendApprovalRequestEmail({
+          toEmail: adminUser.email,
+          toName: adminUser.name,
+          bookingType: serviceType,
+          bookingId: populated._id.toString(),
+          applicantName: populated.guestName || populated.user?.name,
+          applicantDept: populated.department || populated.user?.department || '',
+          stageName: 'Admin Notification (New Booking Created)',
+          detailsLink: `${origin}/admin/bookings`
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[WORKFLOW] Failed to send admin notification email:', err);
+  }
 
   // Trigger initial email for Vehicles/Rooms
   if (serviceType === 'vehicle' || serviceType === 'room') {

@@ -117,12 +117,22 @@ export default function AdminDashboard() {
           fetch('/api/bookings?all=true'),
           fetch('/api/auth/me')
         ]);
-        const user = meRes.ok ? await meRes.json() : null;
         
-        const halls = await hallsRes.json();
-        const vehicles = await vehiclesRes.json();
-        const rooms = await roomsRes.json();
-        const bookings = await bookingsRes.json();
+        const safeJson = async (res, defaultValue = []) => {
+          if (!res.ok) return defaultValue;
+          try {
+            const text = await res.text();
+            return text ? JSON.parse(text) : defaultValue;
+          } catch {
+            return defaultValue;
+          }
+        };
+
+        const user = meRes.ok ? await safeJson(meRes, null) : null;
+        const halls = await safeJson(hallsRes);
+        const vehicles = await safeJson(vehiclesRes);
+        const rooms = await safeJson(roomsRes);
+        const bookings = await safeJson(bookingsRes);
         setCurrentUser(user);
 
         const b = Array.isArray(bookings) ? bookings : [];

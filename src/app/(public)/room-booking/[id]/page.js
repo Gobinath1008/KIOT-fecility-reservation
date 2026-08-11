@@ -32,7 +32,8 @@ function RoomDetailForm() {
     startTime: '',
     endTime: '',
     guests: 1,
-    purpose: ''
+    purpose: '',
+    foodOption: 'normal'
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -76,30 +77,68 @@ function RoomDetailForm() {
     setErrors(e => ({ ...e, date: '', checkOutDate: '', startTime: '', endTime: '' }));
   };
 
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(':').map(Number);
+    return isNaN(h) ? 0 : h * 60 + (m || 0);
+  };
+
   const isStartTimeBooked = (t) => {
-    return bookings.some(b => b.roomCheckInDate === form.date && t >= b.roomCheckInTime && t < b.roomCheckOutTime);
+    const overlappingBookings = bookings.filter(b => b.roomCheckInDate === form.date && t >= b.roomCheckInTime && t < b.roomCheckOutTime);
+    const totalBooked = overlappingBookings.reduce((sum, b) => sum + (b.numberOfGuests || 1), 0);
+    return totalBooked >= (room?.occupancy || 3);
   };
 
   const isEndTimeDisabled = (t) => {
     if (!form.startTime) {
-      return bookings.some(b => b.roomCheckInDate === form.date && t > b.roomCheckInTime && t <= b.roomCheckOutTime);
+      const overlappingBookings = bookings.filter(b => b.roomCheckInDate === form.date && t > b.roomCheckInTime && t <= b.roomCheckOutTime);
+      const totalBooked = overlappingBookings.reduce((sum, b) => sum + (b.numberOfGuests || 1), 0);
+      return totalBooked >= (room?.occupancy || 3);
     }
-    // If check-out is on a different day, end time is not constrained by check-in time of the same day
+    
     if (form.checkOutDate !== form.date) {
-      // Check if checkout time overlaps with a booking on checkout date
-      if (bookings.some(b => b.roomCheckInDate === form.checkOutDate && t > b.roomCheckInTime && t <= b.roomCheckOutTime)) return true;
-      return false;
+      const overlappingBookings = bookings.filter(b => b.roomCheckInDate === form.checkOutDate && t > b.roomCheckInTime && t <= b.roomCheckOutTime);
+      const totalBooked = overlappingBookings.reduce((sum, b) => sum + (b.numberOfGuests || 1), 0);
+      return totalBooked >= (room?.occupancy || 3);
     }
 
     if (t <= form.startTime) return true;
     
-    // Check if the end time itself falls inside a booked range
-    if (bookings.some(b => b.roomCheckInDate === form.date && t > b.roomCheckInTime && t <= b.roomCheckOutTime)) return true;
-
-    // Check if selecting this end time would overlap with an existing booking that starts after our selected start time
-    if (bookings.some(b => b.roomCheckInDate === form.date && b.roomCheckInTime >= form.startTime && t > b.roomCheckInTime)) return true;
-
-    // Check if end time is in the past
+    const activeBookings = bookings.filter(b => b.roomCheckInDate === form.date);
+    const startMs = parseTimeToMinutes(form.startTime);
+    const endMs = parseTimeToMinutes(t);
+    
+    const overlapping = activeBookings.filter(b => {
+      const bStart = parseTimeToMinutes(b.roomCheckInTime || '14:00');
+      const bEnd = parseTimeToMinutes(b.roomCheckOutTime || '12:00');
+      return bStart < endMs && bEnd > startMs;
+    });
+    
+    const points = Array.from(new Set([
+      startMs,
+      endMs,
+      ...overlapping.flatMap(b => {
+        const bStart = parseTimeToMinutes(b.roomCheckInTime || '14:00');
+        const bEnd = parseTimeToMinutes(b.roomCheckOutTime || '12:00');
+        return [bStart, bEnd];
+      }).filter(p => p > startMs && p < endMs)
+    ])).sort((a, b) => a - b);
+    
+    for (let i = 0; i < points.length - 1; i++) {
+      const mid = (points[i] + points[i+1]) / 2;
+      let activeGuests = 0;
+      for (const b of overlapping) {
+        const bStart = parseTimeToMinutes(b.roomCheckInTime || '14:00');
+        const bEnd = parseTimeToMinutes(b.roomCheckOutTime || '12:00');
+        if (mid >= bStart && mid <= bEnd) {
+          activeGuests += (b.numberOfGuests || 1);
+        }
+      }
+      if (activeGuests >= (room?.occupancy || 3)) {
+        return true;
+      }
+    }
+    
     if (form.date === today && isTimeSlotInPast(t)) return true;
 
     return false;
@@ -140,7 +179,8 @@ function RoomDetailForm() {
           roomCheckInTime: form.startTime,
           roomCheckOutTime: form.endTime,
           numberOfGuests: form.guests,
-          roomPurpose: form.purpose
+          roomPurpose: form.purpose,
+          foodOption: form.foodOption
         }),
       });
       const data = await res.json();
@@ -244,6 +284,20 @@ function RoomDetailForm() {
                     value={form.purpose} onChange={e => setForm({...form, purpose: e.target.value})} style={{ resize: 'vertical' }} />
                 </div>
 
+                <div className={styles.section}>
+                  <h2 className={styles.sectionTitle}>🍽️ Food Option</h2>
+                  <div style={{ display: 'flex', gap: '20px', marginTop: '8px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#334155' }}>
+                      <input type="radio" name="foodOption" value="normal" checked={form.foodOption === 'normal'} onChange={e => setForm({...form, foodOption: e.target.value})} style={{ width: '16px', height: '16px', accentColor: '#4f46e5' }} />
+                      Normal Food
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#334155' }}>
+                      <input type="radio" name="foodOption" value="regular" checked={form.foodOption === 'regular'} onChange={e => setForm({...form, foodOption: e.target.value})} style={{ width: '16px', height: '16px', accentColor: '#4f46e5' }} />
+                      Regular Food
+                    </label>
+                  </div>
+                </div>
+
                 <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={submitting}>
                   {submitting ? '⏳ Submitting...' : '🚀 Submit Booking Request'}
                 </button>
@@ -269,6 +323,7 @@ function RoomDetailForm() {
                 <div className={styles.summaryRow}><span>Check-in Time</span><strong>{formatTime12h(form.startTime) || '—'}</strong></div>
                 <div className={styles.summaryRow}><span>Check-out Time</span><strong>{formatTime12h(form.endTime) || '—'}</strong></div>
                 <div className={styles.summaryRow}><span>Guests</span><strong>{form.guests}</strong></div>
+                <div className={styles.summaryRow}><span>Food Option</span><strong style={{ textTransform: 'capitalize' }}>{form.foodOption}</strong></div>
               </div>
               <div className={styles.summaryNote}>
                 ℹ️ Your request will be sent to admin for approval. You&apos;ll see the status in <strong>My Bookings</strong>.

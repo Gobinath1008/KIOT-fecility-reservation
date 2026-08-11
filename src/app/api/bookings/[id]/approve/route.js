@@ -78,6 +78,10 @@ export async function POST(request, props) {
     stageName = 'Hostel Warden';
   }
 
+  if (isSuperAdminOrAdmin) {
+    hasAuthority = true;
+  }
+
   if (!hasAuthority) {
     return NextResponse.json({ message: `You are not authorized to approve/reject at the current stage: ${currentStatus}` }, { status: 403 });
   }
@@ -130,7 +134,18 @@ export async function POST(request, props) {
   let nextRole = '';
   let nextStageLabel = '';
 
-  if (booking.serviceType === 'vehicle') {
+  if (isSuperAdminOrAdmin) {
+    nextStatus = 'approved';
+    if (booking.serviceType === 'vehicle') {
+      if (!driverName || !driverPhone || !totalKm) {
+        return NextResponse.json({ message: 'Driver details (Name, Phone, and Total KM) are required for final approval.' }, { status: 400 });
+      }
+      booking.driverName = driverName;
+      booking.driverPhone = driverPhone;
+      booking.totalKm = totalKm;
+      booking.transportManagerNote = comment || '';
+    }
+  } else if (booking.serviceType === 'vehicle') {
     if (currentStatus === 'pending_hod') {
       nextStatus = 'pending_admin';
       nextRole = 'admin';

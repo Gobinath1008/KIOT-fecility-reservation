@@ -11,12 +11,18 @@ export default function AdminSidebar({ user }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const isSuperAdmin = user?.role === 'super-admin';
+  const isAdmin = user?.role === 'admin';
 
   const isWorkflowApprover = ['hod', 'principal', 'ao', 'transport_manager', 'hostel_warden'].includes(user?.role);
 
   const navLinks = [
     { href: '/admin', label: 'Dashboard', icon: '📊' },
     ...(isSuperAdmin ? [{ href: '/admin/super-admin', label: 'Super Admin', icon: '👑' }] : []),
+    ...(isSuperAdmin || isAdmin ? [
+      { href: '/admin/halls', label: 'Halls', icon: '🏛️' },
+      { href: '/admin/vehicles', label: 'Vehicles', icon: '🚗' },
+      { href: '/admin/rooms', label: 'Rooms', icon: '🏨' },
+    ] : []),
     { href: '/admin/bookings', label: 'Bookings', icon: '📋' },
     ...(!isWorkflowApprover || user?.role === 'hod' ? [{ href: '/', label: 'Booking Now', icon: '📅' }] : []),
   ];

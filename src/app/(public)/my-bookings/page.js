@@ -292,7 +292,8 @@ const formatDateTime = (value) => {
                             {b.serviceType === 'room' ? (
                               <>
                                 Check-in: {b.roomCheckInDate} at {formatTime12h(b.roomCheckInTime || '14:00')}<br />
-                                Check-out: {b.roomCheckOutDate} at {formatTime12h(b.roomCheckOutTime || '12:00')}
+                                Check-out: {b.roomCheckOutDate} at {formatTime12h(b.roomCheckOutTime || '12:00')}<br />
+                                🍽️ Food: <span style={{ textTransform: 'capitalize' }}>{b.foodOption || 'normal'}</span>
                               </>
                             ) : (
                               <>
@@ -437,7 +438,9 @@ const formatDateTime = (value) => {
                                   </div>
                                 )}
                               </td>
-                              <td style={{ padding: '8px', borderBottom: '1px solid #cbd5e1' }}>Accommodation & Food</td>
+                              <td style={{ padding: '8px', borderBottom: '1px solid #cbd5e1' }}>
+                                Accommodation & {selectedBooking.foodOption ? selectedBooking.foodOption.charAt(0).toUpperCase() + selectedBooking.foodOption.slice(1) : 'Normal'} Food
+                              </td>
                             </tr>
                           </tbody>
                         </table>

@@ -73,10 +73,18 @@ function ManageBookingsContent() {
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
-    const res = await fetch('/api/bookings');
-    const data = await res.json();
-    setBookings(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      const res = await fetch('/api/bookings');
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : [];
+      setBookings(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error fetching bookings:', err);
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -214,6 +222,8 @@ function ManageBookingsContent() {
 
   const canApproveBooking = (b) => {
     if (!user) return false;
+    
+    if (user.role === 'admin' || user.role === 'super-admin') return true;
     
     if (b.status === 'pending_hod') {
       // If the HOD themselves booked it, they are authorized to sign off on their own HOD-stage signature
@@ -384,7 +394,8 @@ function ManageBookingsContent() {
                       {b.serviceType === 'room' ? (
                         <>
                           📅 Check-in: {b.roomCheckInDate} at {formatTime12h(b.roomCheckInTime || '14:00')}<br />
-                          📅 Check-out: {b.roomCheckOutDate} at {formatTime12h(b.roomCheckOutTime || '12:00')}
+                          📅 Check-out: {b.roomCheckOutDate} at {formatTime12h(b.roomCheckOutTime || '12:00')}<br />
+                          🍽️ Food: <span style={{ textTransform: 'capitalize' }}>{b.foodOption || 'normal'}</span>
                         </>
                       ) : (
                         <>

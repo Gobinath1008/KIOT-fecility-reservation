@@ -70,12 +70,12 @@ export async function requireAdmin(request) {
   return { user };
 }
 
-// Super Admin only
+// Super Admin only (or Admin with full privileges)
 export async function requireSuperAdmin(request) {
   const { user, error } = await requireAuth(request);
   if (error) return { error };
-  if (user.role !== 'super-admin') {
-    return { error: NextResponse.json({ message: 'Super admin access required' }, { status: 403 }) };
+  if (user.role !== 'super-admin' && user.role !== 'admin') {
+    return { error: NextResponse.json({ message: 'Super admin or Admin access required' }, { status: 403 }) };
   }
   return { user };
 }
@@ -96,8 +96,8 @@ export async function requireServiceAccess(request, serviceType) {
   const { user, error } = await requireAuth(request);
   if (error) return { error };
 
-  // Super admin has access to all services
-  if (user.role === 'super-admin') {
+  // Super admin and standard admin have access to all services
+  if (user.role === 'super-admin' || user.role === 'admin') {
     return { user, hasAccess: true };
   }
 
