@@ -361,7 +361,7 @@ export async function POST(request) {
       guestEmail: guestEmail || currentUser.email,
       guestPhone: guestPhone || currentUser.phone,
       department: currentUser.department || '',
-      status: 'pending',
+      status: isAdminBooking ? 'approved' : 'pending',
     });
   } else if (serviceType === 'vehicle') {
     createdBooking = await VehicleBooking.create({
