@@ -13,7 +13,7 @@ const RoomBookingSchema = new mongoose.Schema({
   numberOfRooms: { type: Number, default: 1 },
   roomPurpose: String,
   specialRequests: String,
-  foodOption: { type: String, enum: ['regular', 'normal'], default: 'normal' },
+  foodOption: { type: String, enum: ['special', 'normal'], default: 'normal' },
 
   status: { type: String, enum: ['pending', 'pending_hod', 'pending_principal', 'pending_ao', 'pending_warden', 'approved', 'rejected', 'cancelled', 'completed'], default: 'pending_hod' },
   guestName: String,

@@ -30,7 +30,9 @@ function BookForm() {
     startTime: initialStart,
     endTime: initialEnd,
     purpose: '',
-    attendees: '1'
+    attendees: '1',
+    includeFood: false,
+    numberOfFood: '1'
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -136,6 +138,8 @@ function BookForm() {
           hallEndTime: form.endTime,
           purpose: form.purpose,
           attendees: parseInt(form.attendees) || 1,
+          includeFood: form.includeFood,
+          numberOfFood: form.includeFood ? parseInt(form.numberOfFood) || 0 : 0
         }),
       });
       const data = await res.json();
@@ -235,8 +239,31 @@ function BookForm() {
                 <h2 className={styles.sectionTitle}>👥 Expected Attendees</h2>
                 <input id="attendees" type="number" className="form-input" min="1" max={hall?.capacity}
                   placeholder={`Max: ${hall?.capacity}`} value={form.attendees}
-                  onChange={e => set('attendees', e.target.value)} style={{ maxWidth: 200 }} />
+                  onChange={e => {
+                    const val = e.target.value;
+                    set('attendees', val);
+                    setForm(f => ({ ...f, attendees: val, numberOfFood: f.includeFood ? val : f.numberOfFood }));
+                  }} style={{ maxWidth: 200 }} />
               </div>
+
+              {/* Food Requirement */}
+              <div className={styles.section}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>
+                  <input type="checkbox" checked={form.includeFood} onChange={e => {
+                    const checked = e.target.checked;
+                    setForm(f => ({ ...f, includeFood: checked, numberOfFood: checked ? f.attendees : '0' }));
+                  }} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} />
+                  🍽️ Include Food Requirement
+                </label>
+              </div>
+
+              {form.includeFood && (
+                <div className={styles.section}>
+                  <h2 className={styles.sectionTitle}>🍽️ Number of Food Plates Required</h2>
+                  <input type="number" className="form-input" min="1" value={form.numberOfFood}
+                    onChange={e => set('numberOfFood', e.target.value)} style={{ maxWidth: 200 }} />
+                </div>
+              )}
 
               <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={loading}>
                 {loading ? '⏳ Submitting...' : '🚀 Submit Booking Request'}
@@ -256,6 +283,10 @@ function BookForm() {
                 <div className={styles.summaryRow}><span>End</span><strong>{formatTime12h(form.endTime) || '—'}</strong></div>
                 <div className={styles.summaryRow}><span>Duration</span><strong>{duration > 0 ? `${duration} hr` : '—'}</strong></div>
                 <div className={styles.summaryRow}><span>Attendees</span><strong>{form.attendees}</strong></div>
+                <div className={styles.summaryRow}><span>Include Food</span><strong>{form.includeFood ? 'Yes' : 'No'}</strong></div>
+                {form.includeFood && (
+                  <div className={styles.summaryRow}><span>Food Plates</span><strong>{form.numberOfFood}</strong></div>
+                )}
               </div>
               <div className={styles.summaryNote}>
                 ℹ️ Your request will be sent to admin for approval. You&apos;ll see the status in <strong>My Bookings</strong>.

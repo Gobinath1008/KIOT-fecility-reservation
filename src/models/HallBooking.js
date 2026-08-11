@@ -10,6 +10,8 @@ const HallBookingSchema = new mongoose.Schema({
   hallEndTime: { type: String, required: true },
   purpose: { type: String, required: true },
   attendees: Number,
+  includeFood: { type: Boolean, default: false },
+  numberOfFood: { type: Number, default: 0 },
 
   status: { type: String, enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed'], default: 'pending' },
   guestName: String,

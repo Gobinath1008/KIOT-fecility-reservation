@@ -292,8 +292,8 @@ function RoomDetailForm() {
                       Normal Food
                     </label>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#334155' }}>
-                      <input type="radio" name="foodOption" value="regular" checked={form.foodOption === 'regular'} onChange={e => setForm({...form, foodOption: e.target.value})} style={{ width: '16px', height: '16px', accentColor: '#4f46e5' }} />
-                      Regular Food
+                      <input type="radio" name="foodOption" value="special" checked={form.foodOption === 'special'} onChange={e => setForm({...form, foodOption: e.target.value})} style={{ width: '16px', height: '16px', accentColor: '#4f46e5' }} />
+                      Special Food
                     </label>
                   </div>
                 </div>

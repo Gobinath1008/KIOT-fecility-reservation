@@ -583,7 +583,11 @@ function ManageBookingsContent() {
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Event Date:</td><td>{selected.date || selected.hallDate || 'N/A'}</td></tr>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Event Time:</td><td>{formatTime12h(selected.startTime || selected.hallStartTime)} – {formatTime12h(selected.endTime || selected.hallEndTime)}</td></tr>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Purpose:</td><td>{selected.purpose || 'N/A'}</td></tr>
-                      <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Expected Attendees:</td><td>{selected.attendees || 'N/A'}</td></tr>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Expected Attendees:</td><td>{selected.attendees || 'N/A'}</td></tr>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Include Food:</td><td>{selected.includeFood ? 'Yes' : 'No'}</td></tr>
+                      {selected.includeFood && (
+                        <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Food Plates:</td><td>{selected.numberOfFood || '0'}</td></tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

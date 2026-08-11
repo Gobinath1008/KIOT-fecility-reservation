@@ -483,7 +483,11 @@ const formatDateTime = (value) => {
                             <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Event Date:</td><td>{selectedBooking.hallDate || 'N/A'}</td></tr>
                             <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Event Time:</td><td>{formatTime12h(selectedBooking.hallStartTime)} – {formatTime12h(selectedBooking.hallEndTime)}</td></tr>
                             <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Purpose:</td><td>{selectedBooking.purpose || 'N/A'}</td></tr>
-                            <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Expected Attendees:</td><td>{selectedBooking.attendees || 'N/A'}</td></tr>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Expected Attendees:</td><td>{selectedBooking.attendees || 'N/A'}</td></tr>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Include Food:</td><td>{selectedBooking.includeFood ? 'Yes' : 'No'}</td></tr>
+                            {selectedBooking.includeFood && (
+                              <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Food Plates:</td><td>{selectedBooking.numberOfFood || '0'}</td></tr>
+                            )}
                           </tbody>
                         </table>
                       </div>

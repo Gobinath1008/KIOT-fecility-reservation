@@ -170,7 +170,8 @@ export async function POST(request) {
     hallDate, hallStartTime, hallEndTime, purpose, attendees,
     vehiclePickupDate, vehicleReturnDate, vehiclePickupTime, vehicleReturnTime, pickupLocation, returnLocation, withDriver, fuelOption,
     roomCheckInDate, roomCheckOutDate, roomCheckInTime, roomCheckOutTime, numberOfGuests, specialRequests, roomPurpose,
-    guestName, guestEmail, guestPhone, foodOption
+    guestName, guestEmail, guestPhone, foodOption,
+    includeFood, numberOfFood
   } = body;
 
   if (!serviceType || !serviceId) {
@@ -354,6 +355,8 @@ export async function POST(request) {
       hallEndTime,
       purpose,
       attendees,
+      includeFood: !!includeFood,
+      numberOfFood: includeFood ? parseInt(numberOfFood) || 0 : 0,
       guestName: guestName || currentUser.name,
       guestEmail: guestEmail || currentUser.email,
       guestPhone: guestPhone || currentUser.phone,
