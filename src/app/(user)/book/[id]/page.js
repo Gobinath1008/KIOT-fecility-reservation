@@ -276,7 +276,7 @@ function BookForm() {
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>
                   <input type="checkbox" checked={form.includeChiefGuest} onChange={e => {
                     const checked = e.target.checked;
-                    setForm(f => ({ ...f, includeChiefGuest: checked, normalFoodCount: checked ? '1' : '0', specialFoodCount: checked ? '1' : '0' }));
+                    setForm(f => ({ ...f, includeChiefGuest: checked, normalFoodCount: '0', specialFoodCount: '0' }));
                   }} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} />
                   ⭐ Include Chief Guest Food
                 </label>
