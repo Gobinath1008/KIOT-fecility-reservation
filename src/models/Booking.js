@@ -36,6 +36,9 @@ const BookingSchema = new mongoose.Schema({
   // Hall food requirement fields
   includeFood: { type: Boolean, default: false },
   numberOfFood: { type: Number, default: 0 },
+  includeChiefGuest: { type: Boolean, default: false },
+  normalFoodCount: { type: Number, default: 0 },
+  specialFoodCount: { type: Number, default: 0 },
 
   // Common fields
   status: { type: String, enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed'], default: 'pending' },

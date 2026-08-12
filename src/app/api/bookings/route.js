@@ -171,7 +171,8 @@ export async function POST(request) {
     vehiclePickupDate, vehicleReturnDate, vehiclePickupTime, vehicleReturnTime, pickupLocation, returnLocation, withDriver, fuelOption,
     roomCheckInDate, roomCheckOutDate, roomCheckInTime, roomCheckOutTime, numberOfGuests, specialRequests, roomPurpose,
     guestName, guestEmail, guestPhone, foodOption,
-    includeFood, numberOfFood
+    includeFood, numberOfFood,
+    includeChiefGuest, normalFoodCount, specialFoodCount
   } = body;
 
   if (!serviceType || !serviceId) {
@@ -357,6 +358,9 @@ export async function POST(request) {
       attendees,
       includeFood: !!includeFood,
       numberOfFood: includeFood ? parseInt(numberOfFood) || 0 : 0,
+      includeChiefGuest: !!includeChiefGuest,
+      normalFoodCount: includeChiefGuest ? parseInt(normalFoodCount) || 0 : 0,
+      specialFoodCount: includeChiefGuest ? parseInt(specialFoodCount) || 0 : 0,
       guestName: guestName || currentUser.name,
       guestEmail: guestEmail || currentUser.email,
       guestPhone: guestPhone || currentUser.phone,

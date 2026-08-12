@@ -485,8 +485,13 @@ const formatDateTime = (value) => {
                             <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Purpose:</td><td>{selectedBooking.purpose || 'N/A'}</td></tr>
                             <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Expected Attendees:</td><td>{selectedBooking.attendees || 'N/A'}</td></tr>
                             <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Include Food:</td><td>{selectedBooking.includeFood ? 'Yes' : 'No'}</td></tr>
-                            {selectedBooking.includeFood && (
-                              <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Food Plates:</td><td>{selectedBooking.numberOfFood || '0'}</td></tr>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Food Plates:</td><td>{selectedBooking.numberOfFood || '0'}</td></tr>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Chief Guest Food:</td><td>{selectedBooking.includeChiefGuest ? 'Yes' : 'No'}</td></tr>
+                            {selectedBooking.includeChiefGuest && (
+                              <>
+                                <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Normal Food Count:</td><td>{selectedBooking.normalFoodCount || '0'}</td></tr>
+                                <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Special Food Count:</td><td>{selectedBooking.specialFoodCount || '0'}</td></tr>
+                              </>
                             )}
                           </tbody>
                         </table>

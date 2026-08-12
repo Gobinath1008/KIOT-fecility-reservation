@@ -585,8 +585,13 @@ function ManageBookingsContent() {
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Purpose:</td><td>{selected.purpose || 'N/A'}</td></tr>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Expected Attendees:</td><td>{selected.attendees || 'N/A'}</td></tr>
                       <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Include Food:</td><td>{selected.includeFood ? 'Yes' : 'No'}</td></tr>
-                      {selected.includeFood && (
-                        <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Food Plates:</td><td>{selected.numberOfFood || '0'}</td></tr>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Food Plates:</td><td>{selected.numberOfFood || '0'}</td></tr>
+                      <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Chief Guest Food:</td><td>{selected.includeChiefGuest ? 'Yes' : 'No'}</td></tr>
+                      {selected.includeChiefGuest && (
+                        <>
+                          <tr style={{ borderBottom: '1px solid #f1f5f9' }}><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Normal Food Count:</td><td>{selected.normalFoodCount || '0'}</td></tr>
+                          <tr><td style={{ padding: '8px 0', fontWeight: 'bold' }}>Special Food Count:</td><td>{selected.specialFoodCount || '0'}</td></tr>
+                        </>
                       )}
                     </tbody>
                   </table>

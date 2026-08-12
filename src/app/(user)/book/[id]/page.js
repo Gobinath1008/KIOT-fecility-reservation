@@ -32,7 +32,10 @@ function BookForm() {
     purpose: '',
     attendees: '1',
     includeFood: false,
-    numberOfFood: '1'
+    numberOfFood: '1',
+    includeChiefGuest: false,
+    normalFoodCount: '0',
+    specialFoodCount: '0'
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -139,7 +142,10 @@ function BookForm() {
           purpose: form.purpose,
           attendees: parseInt(form.attendees) || 1,
           includeFood: form.includeFood,
-          numberOfFood: form.includeFood ? parseInt(form.numberOfFood) || 0 : 0
+          numberOfFood: form.includeFood ? parseInt(form.numberOfFood) || 0 : 0,
+          includeChiefGuest: form.includeChiefGuest,
+          normalFoodCount: form.includeChiefGuest ? parseInt(form.normalFoodCount) || 0 : 0,
+          specialFoodCount: form.includeChiefGuest ? parseInt(form.specialFoodCount) || 0 : 0
         }),
       });
       const data = await res.json();
@@ -265,6 +271,32 @@ function BookForm() {
                 </div>
               )}
 
+              {/* Chief Guest Food */}
+              <div className={styles.section}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>
+                  <input type="checkbox" checked={form.includeChiefGuest} onChange={e => {
+                    const checked = e.target.checked;
+                    setForm(f => ({ ...f, includeChiefGuest: checked, normalFoodCount: checked ? '1' : '0', specialFoodCount: checked ? '1' : '0' }));
+                  }} style={{ width: '18px', height: '18px', accentColor: '#4f46e5' }} />
+                  ⭐ Include Chief Guest Food
+                </label>
+              </div>
+
+              {form.includeChiefGuest && (
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                  <div className={styles.section} style={{ flex: 1, minWidth: '150px', marginBottom: 0 }}>
+                    <h2 className={styles.sectionTitle}>🍽️ Normal Food Count</h2>
+                    <input type="number" className="form-input" min="0" value={form.normalFoodCount}
+                      onChange={e => set('normalFoodCount', e.target.value)} />
+                  </div>
+                  <div className={styles.section} style={{ flex: 1, minWidth: '150px', marginBottom: 0 }}>
+                    <h2 className={styles.sectionTitle}>✨ Special Food Count</h2>
+                    <input type="number" className="form-input" min="0" value={form.specialFoodCount}
+                      onChange={e => set('specialFoodCount', e.target.value)} />
+                  </div>
+                </div>
+              )}
+
               <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={loading}>
                 {loading ? '⏳ Submitting...' : '🚀 Submit Booking Request'}
               </button>
@@ -284,8 +316,15 @@ function BookForm() {
                 <div className={styles.summaryRow}><span>Duration</span><strong>{duration > 0 ? `${duration} hr` : '—'}</strong></div>
                 <div className={styles.summaryRow}><span>Attendees</span><strong>{form.attendees}</strong></div>
                 <div className={styles.summaryRow}><span>Include Food</span><strong>{form.includeFood ? 'Yes' : 'No'}</strong></div>
-                {form.includeFood && (
+                 {form.includeFood && (
                   <div className={styles.summaryRow}><span>Food Plates</span><strong>{form.numberOfFood}</strong></div>
+                )}
+                <div className={styles.summaryRow}><span>Chief Guest Food</span><strong>{form.includeChiefGuest ? 'Yes' : 'No'}</strong></div>
+                {form.includeChiefGuest && (
+                  <>
+                    <div className={styles.summaryRow}><span>Normal Food</span><strong>{form.normalFoodCount}</strong></div>
+                    <div className={styles.summaryRow}><span>Special Food</span><strong>{form.specialFoodCount}</strong></div>
+                  </>
                 )}
               </div>
               <div className={styles.summaryNote}>

@@ -63,7 +63,10 @@ const getBookingDetails = (booking, serviceDetails = {}) => {
 
   switch (booking.serviceType) {
     case 'hall':
-      const foodText = booking.includeFood ? `<div><strong>Food:</strong> ${escapeHtml(booking.numberOfFood || 0)} plates</div>` : '';
+      let foodText = booking.includeFood ? `<div><strong>Food:</strong> ${escapeHtml(booking.numberOfFood || 0)} plates</div>` : '';
+      if (booking.includeChiefGuest) {
+        foodText += `<div><strong>Chief Guest Food:</strong> Normal: ${escapeHtml(booking.normalFoodCount || 0)} | Special: ${escapeHtml(booking.specialFoodCount || 0)}</div>`;
+      }
       return {
         dateHtml: `<div><strong>Date:</strong> ${escapeHtml(booking.hallDate)}</div><div><strong>From:</strong> ${escapeHtml(formatTime12h(booking.hallStartTime))}</div><div><strong>To:</strong> ${escapeHtml(formatTime12h(booking.hallEndTime))}</div>`,
         time: '',
@@ -403,6 +406,11 @@ export const printSingleBooking = (booking) => {
             <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Expected Attendees:</td><td>${escape(booking.attendees || 'N/A')}</td></tr>
             <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Include Food:</td><td>${booking.includeFood ? 'Yes' : 'No'}</td></tr>
             ${booking.includeFood ? `<tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Food Plates:</td><td>${escape(booking.numberOfFood || '0')}</td></tr>` : ''}
+            <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Chief Guest Food:</td><td>${booking.includeChiefGuest ? 'Yes' : 'No'}</td></tr>
+            ${booking.includeChiefGuest ? `
+              <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Normal Food Count:</td><td>${escape(booking.normalFoodCount || '0')}</td></tr>
+              <tr style="border-bottom: 1px solid #eee;"><td style="padding: 8px 0; font-weight: bold;">Special Food Count:</td><td>${escape(booking.specialFoodCount || '0')}</td></tr>
+            ` : ''}
           </tbody>
         </table>
         ${approvalsList ? `
